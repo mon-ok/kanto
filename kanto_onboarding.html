@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kanto — Find parking, right around the corner</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Nunito:wght@400;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --k1:#7C3D00; --k2:#C17B2A; --k3:#E8A84A; --kl:#FEF3E2;
+  --mint:#F0C080; --teal:#2D9E75; --teal-l:#A8D5C0; --coral:#E86A4A;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#080400;display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans',-apple-system,sans-serif;overflow:hidden}
+.phone{width:375px;height:812px;border-radius:52px;position:relative;overflow:hidden;box-shadow:0 0 0 10px #1a0e04,0 0 0 12px #241505,0 50px 150px rgba(0,0,0,0.9),inset 0 0 0 1px rgba(255,255,255,0.06);background:#0d0804}
+.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:126px;height:34px;background:#080400;border-radius:0 0 20px 20px;z-index:200}
+.screen{position:absolute;inset:0;opacity:0;pointer-events:none;display:flex;flex-direction:column;overflow:hidden}
+.screen.active{opacity:1;pointer-events:all}
+
+/* PROGRESS DOTS */
+.progress-dots{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:100}
+.pdot{width:6px;height:6px;border-radius:3px;background:rgba(255,255,255,0.18);transition:all 0.4s cubic-bezier(0.34,1.2,0.64,1)}
+.pdot.act{width:20px;background:var(--k3)}
+
+/* SKIP */
+.skip-btn{position:absolute;top:52px;right:24px;z-index:150;font-size:12px;font-weight:600;color:rgba(255,255,255,0.3);letter-spacing:0.08em;background:none;border:none;cursor:pointer;padding:6px 0}
+
+/* ════ S0 SPLASH ════ */
+#s0{background:#0a0500;align-items:center;justify-content:center}
+.splash-bg{position:absolute;inset:0;overflow:hidden}
+.sb-ring{position:absolute;border-radius:50%;border:1px solid rgba(193,123,42,0.12);top:50%;left:50%;transform:translate(-50%,-50%)}
+.sb-ring:nth-child(1){width:140px;height:140px;animation:ringPulse 3s ease-in-out infinite}
+.sb-ring:nth-child(2){width:240px;height:240px;animation:ringPulse 3s ease-in-out infinite 0.5s}
+.sb-ring:nth-child(3){width:340px;height:340px;animation:ringPulse 3s ease-in-out infinite 1s}
+.sb-ring:nth-child(4){width:460px;height:460px;animation:ringPulse 3s ease-in-out infinite 1.5s}
+.sb-ring:nth-child(5){width:580px;height:580px;animation:ringPulse 3s ease-in-out infinite 2s}
+.splash-center{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center}
+.logo-outer{width:110px;height:110px;border-radius:32px;background:linear-gradient(145deg,#7C3D00,#C17B2A,#E8A84A);display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 0 60px rgba(193,123,42,0.55),0 0 120px rgba(193,123,42,0.22);animation:logoIn 1s cubic-bezier(0.34,1.56,0.64,1) both;animation-delay:0.2s}
+.logo-inner-ring{position:absolute;inset:6px;border-radius:26px;border:1px solid rgba(255,255,255,0.18)}
+.logo-k{font-family:'Nunito',sans-serif;font-weight:900;font-size:58px;color:white;line-height:1;text-shadow:0 4px 20px rgba(0,0,0,0.3)}
+.splash-particles{position:absolute;inset:-40px;pointer-events:none}
+.particle{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--mint);opacity:0;animation:particleFloat linear infinite}
+.splash-name{font-family:'Nunito',sans-serif;font-weight:900;font-size:48px;color:white;letter-spacing:-2px;margin-top:20px;animation:nameReveal 0.8s cubic-bezier(0.16,1,0.3,1) both;animation-delay:0.9s}
+.splash-tagline{font-size:12px;font-weight:600;letter-spacing:0.18em;color:rgba(232,168,74,0.5);text-transform:uppercase;margin-top:8px;animation:nameReveal 0.6s ease both;animation-delay:1.2s}
+.splash-loader{margin-top:60px;width:40px;height:3px;border-radius:2px;background:rgba(255,255,255,0.1);overflow:hidden;animation:nameReveal 0.4s ease both;animation-delay:1.5s}
+.splash-loader-fill{height:100%;width:0%;background:var(--k2);border-radius:2px;animation:loaderFill 1.8s ease both;animation-delay:1.6s}
+
+/* ════ S1 PROBLEM ════ */
+#s1{background:#060300;align-items:center;justify-content:center;padding:0 36px;overflow:hidden}
+.welcome-bg{position:absolute;inset:0;pointer-events:none}
+.w-orb{position:absolute;border-radius:50%;filter:blur(70px);animation:orbFloat ease-in-out infinite}
+.w-orb-1{width:360px;height:360px;top:-100px;left:-80px;background:radial-gradient(circle,rgba(100,50,0,0.8) 0%,rgba(50,20,0,0.35) 70%);animation-duration:9s}
+.w-orb-2{width:280px;height:280px;bottom:-60px;right:-60px;background:radial-gradient(circle,rgba(150,80,10,0.5) 0%,rgba(80,40,0,0.25) 70%);animation-duration:11s;animation-delay:2s}
+.w-orb-3{width:180px;height:180px;top:40%;left:10%;background:radial-gradient(circle,rgba(193,123,42,0.25) 0%,transparent 70%);animation-duration:7s;animation-delay:4s}
+.welcome-bg::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(255,255,255,0.01) 60px,rgba(255,255,255,0.01) 61px),repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(255,255,255,0.01) 60px,rgba(255,255,255,0.01) 61px)}
+.welcome-wrap{text-align:center;position:relative;z-index:1}
+.welcome-eyebrow{font-size:11px;font-weight:700;letter-spacing:0.2em;color:rgba(232,168,74,0.4);text-transform:uppercase;margin-bottom:24px}
+.welcome-title{font-weight:900;font-size:42px;line-height:1.0;color:white;letter-spacing:-2.5px;margin-bottom:20px}
+.welcome-title .kanto-grad{background:linear-gradient(135deg,#C17B2A,#E8A84A,#F0C080,#C17B2A);background-size:300% 300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:kantoGrad 4s ease-in-out infinite}
+.welcome-divider{width:40px;height:2px;border-radius:1px;background:linear-gradient(90deg,transparent,var(--k2),transparent);margin:0 auto 24px}
+.w-stat-callout{font-size:13px;line-height:1.75;color:rgba(255,255,255,0.3);margin-bottom:22px;letter-spacing:0.01em}
+.w-stat-callout strong{color:var(--coral);font-size:18px;font-weight:800;display:block;margin-bottom:4px}
+.w-solution{font-size:20px;font-weight:800;color:var(--mint);letter-spacing:-0.4px;margin-bottom:14px;line-height:1.2}
+.welcome-desc{font-size:14px;line-height:1.8;color:rgba(255,255,255,0.35);letter-spacing:0.01em}
+.welcome-desc em{color:rgba(232,168,74,0.7);font-style:normal}
+
+/* ════ S2 MAP ════ */
+#s2{background:#07060a}
+.s2-header{padding:56px 28px 14px;opacity:0;transform:translateY(12px);transition:opacity 0.5s ease,transform 0.5s cubic-bezier(0.16,1,0.3,1)}
+.s2-header.vis{opacity:1;transform:translateY(0)}
+.s2-eyebrow{font-size:11px;font-weight:700;letter-spacing:0.15em;color:rgba(232,168,74,0.4);text-transform:uppercase;margin-bottom:10px}
+.s2-title{font-weight:900;font-size:28px;color:white;line-height:1.1;letter-spacing:-1px}
+.s2-title span{color:var(--k3)}
+.s2-stage{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;padding:0 18px 70px;gap:12px;justify-content:center}
+
+/* Map viewport with zoom animation */
+.map-viewport{width:100%;border-radius:18px;overflow:hidden;border:1px solid rgba(193,123,42,0.18);position:relative;background:#12100a;opacity:0;transform:scale(1.08);transition:opacity 0.6s ease,transform 0.8s cubic-bezier(0.16,1,0.3,1)}
+.map-viewport.vis{opacity:1;transform:scale(1)}
+.map-visual{height:200px;background:#1a1408;position:relative;overflow:hidden}
+.map-bg-tile{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(193,123,42,0.05) 28px,rgba(193,123,42,0.05) 29px),repeating-linear-gradient(90deg,transparent,transparent 28px,rgba(193,123,42,0.05) 28px,rgba(193,123,42,0.05) 29px)}
+.map-road-h{position:absolute;left:0;right:0;height:10px;background:rgba(255,255,255,0.07)}
+.map-road-v{position:absolute;top:0;bottom:0;width:10px;background:rgba(255,255,255,0.07)}
+.road-label{position:absolute;font-size:8px;font-weight:600;color:rgba(255,255,255,0.2);letter-spacing:0.08em;transform:translateY(-50%)}
+
+/* Animated pins */
+.mpin{position:absolute;display:flex;flex-direction:column;align-items:center;opacity:0;transform:scale(0) translateY(10px);transition:opacity 0.4s ease,transform 0.5s cubic-bezier(0.34,1.56,0.64,1)}
+.mpin.pop{opacity:1;transform:scale(1) translateY(0)}
+.mpin-bubble{padding:4px 9px;border-radius:8px;font-size:10px;font-weight:800;color:white;white-space:nowrap;position:relative;box-shadow:0 4px 14px rgba(0,0,0,0.5)}
+.mpin-bubble::after{content:'';position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-width:5px;border-bottom:none}
+.mpin-dot{width:8px;height:8px;border-radius:50%;margin-top:2px}
+.mpin-amber .mpin-bubble{background:var(--k2)}
+.mpin-amber .mpin-bubble::after{border-top-color:var(--k2)}
+.mpin-amber .mpin-dot{background:var(--k2);box-shadow:0 0 0 3px rgba(193,123,42,0.25),0 0 12px rgba(193,123,42,0.5);animation:pinPulse 2s ease-in-out infinite}
+.mpin-green .mpin-bubble{background:#2D9E75}
+.mpin-green .mpin-bubble::after{border-top-color:#2D9E75}
+.mpin-green .mpin-dot{background:#2D9E75;box-shadow:0 0 0 3px rgba(45,158,117,0.25),0 0 12px rgba(45,158,117,0.4);animation:pinPulseGreen 2s ease-in-out infinite 0.3s}
+.mpin-gray .mpin-bubble{background:#3a3a3a}
+.mpin-gray .mpin-bubble::after{border-top-color:#3a3a3a}
+.mpin-gray .mpin-dot{background:#555}
+.user-dot{position:absolute;width:12px;height:12px;border-radius:50%;background:#5AB0FF;box-shadow:0 0 0 4px rgba(90,176,255,0.2),0 0 14px rgba(90,176,255,0.4)}
+.user-ring{position:absolute;width:32px;height:32px;border-radius:50%;border:1.5px solid rgba(90,176,255,0.3);animation:userRing 2.5s ease-out infinite}
+
+/* Highlighted spot card under map */
+.spot-card-highlight{padding:12px 14px;display:flex;align-items:center;gap:12px;background:#12100a}
+.sc-icon{width:38px;height:38px;border-radius:11px;background:rgba(193,123,42,0.12);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sc-info{flex:1}
+.sc-name{font-size:13px;font-weight:700;color:white}
+.sc-addr{font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px}
+.sc-price{font-family:'DM Mono',monospace;font-size:15px;font-weight:500;color:var(--k3)}
+.sc-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;background:rgba(45,158,117,0.15);color:var(--teal-l);border:1px solid rgba(45,158,117,0.3);margin-top:3px}
+
+/* Description cards below map */
+.desc-cards{display:flex;flex-direction:column;gap:8px;width:100%}
+.desc-card{border-radius:14px;padding:12px 14px;display:flex;align-items:flex-start;gap:12px;opacity:0;transform:translateY(12px);transition:opacity 0.45s ease,transform 0.45s cubic-bezier(0.34,1.2,0.64,1)}
+.desc-card.vis{opacity:1;transform:translateY(0)}
+.desc-card-amber{background:rgba(193,123,42,0.07);border:1px solid rgba(193,123,42,0.14)}
+.desc-card-teal{background:rgba(45,158,117,0.07);border:1px solid rgba(45,158,117,0.14)}
+.dc-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.dc-text{flex:1}
+.dc-title{font-size:12px;font-weight:700;color:rgba(255,255,255,0.8);margin-bottom:3px}
+.dc-sub{font-size:11px;color:rgba(255,255,255,0.35);line-height:1.5}
+
+/* ════ S3 BOOKING ════ */
+#s3{background:#07080d}
+.s3-header{padding:56px 28px 14px;opacity:0;transform:translateY(12px);transition:opacity 0.5s ease,transform 0.5s cubic-bezier(0.16,1,0.3,1)}
+.s3-header.vis{opacity:1;transform:translateY(0)}
+.s3-eyebrow{font-size:11px;font-weight:700;letter-spacing:0.15em;color:rgba(45,158,117,0.5);text-transform:uppercase;margin-bottom:10px}
+.s3-title{font-weight:900;font-size:28px;color:white;line-height:1.1;letter-spacing:-1px}
+.s3-title span{color:var(--teal-l)}
+.s3-stage{flex:1;display:flex;flex-direction:column;align-items:center;padding:0 18px 70px;gap:0;justify-content:center;position:relative}
+
+/* Phone walkthrough */
+.phone-wt{width:100%;position:relative;opacity:0;transform:translateY(16px) scale(0.97);transition:opacity 0.5s ease,transform 0.6s cubic-bezier(0.34,1.2,0.64,1)}
+.phone-wt.vis{opacity:1;transform:translateY(0) scale(1)}
+.wt-phone-frame{background:#0c0c18;border-radius:22px;border:1.5px solid rgba(255,255,255,0.1);overflow:hidden;position:relative}
+.wt-status{background:#0c0c18;padding:10px 16px 6px;display:flex;justify-content:space-between;align-items:center}
+.wt-status span{font-size:10px;color:rgba(255,255,255,0.4);font-weight:500}
+.wt-topbar{background:linear-gradient(135deg,#0a1a22,#0f2a1e);padding:10px 14px;display:flex;align-items:center;gap:10px}
+.wt-back{font-size:14px;color:rgba(255,255,255,0.5)}
+.wt-topbar-title{font-size:13px;font-weight:700;color:white;flex:1}
+.wt-topbar-badge{font-size:9px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(45,158,117,0.2);color:var(--teal-l);border:1px solid rgba(45,158,117,0.3)}
+.wt-content{padding:10px 14px 14px;display:flex;flex-direction:column;gap:8px}
+.wt-spot-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.04);border-radius:11px;padding:9px 11px;border:1px solid rgba(255,255,255,0.07)}
+.wt-spot-icon{width:34px;height:34px;border-radius:9px;background:rgba(193,123,42,0.15);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.wt-spot-name{font-size:11px;font-weight:700;color:white}
+.wt-spot-addr{font-size:9px;color:rgba(255,255,255,0.35);margin-top:1px}
+.wt-spot-price{font-family:'DM Mono',monospace;font-size:12px;color:var(--k3);font-weight:500;flex-shrink:0}
+.wt-section{font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:2px}
+.wt-type-row{display:flex;gap:6px}
+.wt-type-btn{flex:1;padding:7px 6px;border-radius:8px;font-size:10px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.03)}
+.wt-type-btn.sel{background:rgba(45,158,117,0.15);border-color:rgba(45,158,117,0.35);color:var(--teal-l)}
+.wt-time-row{display:flex;gap:6px}
+.wt-time-field{flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:8px;padding:7px 9px}
+.wt-time-label{font-size:8px;color:rgba(255,255,255,0.3);margin-bottom:2px}
+.wt-time-val{font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,0.75);font-weight:500}
+.wt-duration-row{display:flex;gap:5px}
+.wt-dur-btn{flex:1;padding:6px 4px;border-radius:7px;font-size:10px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);background:transparent}
+.wt-dur-btn.sel{background:rgba(193,123,42,0.15);border-color:rgba(193,123,42,0.4);color:var(--k3)}
+
+/* Step indicators below phone */
+.wt-steps{display:flex;align-items:center;gap:0;width:100%;margin:10px 0 12px;opacity:0;transition:opacity 0.4s ease}
+.wt-steps.vis{opacity:1}
+.wt-step{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.wt-step-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.15);transition:background 0.4s,transform 0.4s cubic-bezier(0.34,1.56,0.64,1)}
+.wt-step-dot.act{background:var(--teal-l);transform:scale(1.4)}
+.wt-step-label{font-size:8px;color:rgba(255,255,255,0.25);font-weight:600;letter-spacing:0.05em}
+.wt-step-label.act{color:var(--teal-l)}
+.wt-step-line{flex:1;height:1px;background:rgba(255,255,255,0.1);margin-top:-4px;align-self:flex-start;margin-top:3px}
+
+/* Payment + confirm */
+.pay-row{display:flex;gap:7px;width:100%;opacity:0;transform:translateY(8px);transition:opacity 0.4s ease,transform 0.4s ease}
+.pay-row.vis{opacity:1;transform:translateY(0)}
+.pay-chip-s{flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:11px;padding:9px 6px;text-align:center}
+.pay-chip-s.sel{background:rgba(45,158,117,0.12);border-color:rgba(45,158,117,0.35)}
+.pay-chip-name-s{font-size:11px;font-weight:700;color:rgba(255,255,255,0.75)}
+.pay-chip-name-s.gcash{color:#5AB0FF}
+.pay-chip-name-s.maya{color:#3DD68C}
+.confirm-flow{width:100%;border-radius:13px;padding:12px 14px;background:rgba(45,158,117,0.07);border:1px solid rgba(45,158,117,0.2);display:flex;align-items:center;gap:11px;opacity:0;transform:translateY(10px) scale(0.98);transition:opacity 0.5s ease,transform 0.5s cubic-bezier(0.34,1.2,0.64,1)}
+.confirm-flow.vis{opacity:1;transform:translateY(0) scale(1)}
+.cf-check{width:30px;height:30px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:13px;color:white;flex-shrink:0}
+.cf-label{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(168,213,192,0.5)}
+.cf-val{font-size:12px;font-weight:700;color:rgba(255,255,255,0.85);margin-top:2px}
+
+/* ════ S4 EARNINGS ════ */
+#s4{background:#0a0700}
+.s4-header{padding:56px 28px 0;flex-shrink:0;opacity:0;transform:translateY(12px);transition:opacity 0.5s ease,transform 0.5s cubic-bezier(0.16,1,0.3,1)}
+.s4-header.vis{opacity:1;transform:translateY(0)}
+.s4-eyebrow{font-size:11px;font-weight:700;letter-spacing:0.15em;color:rgba(232,168,74,0.4);text-transform:uppercase;margin-bottom:10px}
+.s4-title{font-weight:900;font-size:28px;color:white;line-height:1.1;letter-spacing:-1px}
+.s4-title span{background:linear-gradient(135deg,#C17B2A,#E8A84A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.s4-stage{flex:1;display:flex;flex-direction:column;align-items:center;padding:14px 18px 70px;gap:10px;justify-content:center}
+.earn-card{width:100%;border-radius:22px;padding:20px 20px;background:linear-gradient(145deg,#1a0e00,#2a1800,#1a0e00);border:1px solid rgba(193,123,42,0.25);position:relative;overflow:hidden;opacity:0;transform:translateY(18px) scale(0.97);transition:opacity 0.5s ease,transform 0.6s cubic-bezier(0.34,1.2,0.64,1)}
+.earn-card.vis{opacity:1;transform:translateY(0) scale(1)}
+.earn-card::before{content:'K';position:absolute;bottom:-40px;right:-10px;font-family:'Nunito',sans-serif;font-size:260px;font-weight:900;color:rgba(193,123,42,0.04);line-height:1;pointer-events:none}
+.earn-label{font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(232,168,74,0.4);margin-bottom:8px}
+.earn-amount{font-family:'DM Mono',monospace;font-size:44px;font-weight:500;color:white;letter-spacing:-2px;line-height:1}
+.earn-amount span{font-size:22px;color:rgba(255,255,255,0.4);vertical-align:top;margin-top:7px;display:inline-block}
+.earn-sub{font-size:12px;color:rgba(255,255,255,0.3);margin-top:8px}
+.earn-bar-wrap{margin-top:16px}
+.earn-bar-label{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.25);margin-bottom:6px}
+.earn-bar-track{height:5px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden}
+.earn-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--k1),var(--k2),var(--k3));width:0%;transition:width 1.2s cubic-bezier(0.16,1,0.3,1)}
+.earn-stats{display:flex;gap:8px;width:100%}
+.earn-stat{flex:1;border-radius:13px;padding:11px 12px;background:rgba(193,123,42,0.06);border:1px solid rgba(193,123,42,0.12);opacity:0;transform:translateY(10px);transition:opacity 0.4s ease,transform 0.4s ease}
+.earn-stat.vis{opacity:1;transform:translateY(0)}
+.earn-stat-val{font-family:'DM Mono',monospace;font-size:19px;font-weight:500;color:var(--k3)}
+.earn-stat-label{font-size:10px;color:rgba(255,255,255,0.3);margin-top:3px}
+.req-item{width:100%;border-radius:13px;padding:11px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(8px);transition:opacity 0.4s ease,transform 0.4s ease}
+.req-item.vis{opacity:1;transform:translateY(0)}
+.req-avatar{width:34px;height:34px;border-radius:50%;background:rgba(193,123,42,0.18);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--k3);flex-shrink:0}
+.req-info{flex:1}
+.req-name{font-size:12px;font-weight:700;color:rgba(255,255,255,0.85)}
+.req-meta{font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px}
+.req-badge{font-size:10px;font-weight:700;padding:4px 9px;border-radius:7px;background:rgba(232,168,74,0.12);color:var(--k3);border:1px solid rgba(232,168,74,0.25)}
+.req-badge.acc{background:rgba(45,158,117,0.12);color:var(--teal-l);border-color:rgba(45,158,117,0.3)}
+
+/* ════ S5 ROLE SELECT ════ */
+#s5{background:#060300}
+.s5-bg{position:absolute;inset:0;pointer-events:none}
+.s5-orb-1{position:absolute;width:400px;height:400px;border-radius:50%;top:-150px;left:-100px;background:radial-gradient(circle,rgba(124,61,0,0.6) 0%,transparent 70%);filter:blur(60px);animation:orbFloat 10s ease-in-out infinite}
+.s5-orb-2{position:absolute;width:300px;height:300px;border-radius:50%;bottom:-80px;right:-80px;background:radial-gradient(circle,rgba(45,158,117,0.3) 0%,transparent 70%);filter:blur(60px);animation:orbFloat 12s ease-in-out infinite 3s}
+.s5-content{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 28px}
+.s5-logo{font-family:'Nunito',sans-serif;font-weight:900;font-size:36px;color:white;letter-spacing:-1px;opacity:0;transform:scale(0.8);transition:opacity 0.6s ease,transform 0.6s cubic-bezier(0.34,1.56,0.64,1)}
+.s5-logo.vis{opacity:1;transform:scale(1)}
+.s5-logo span{background:linear-gradient(135deg,#C17B2A,#E8A84A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.s5-headline{font-weight:900;font-size:32px;line-height:1.05;color:white;letter-spacing:-1.5px;text-align:center;margin-top:16px;opacity:0;transform:translateY(14px);transition:opacity 0.5s ease,transform 0.5s cubic-bezier(0.16,1,0.3,1)}
+.s5-headline.vis{opacity:1;transform:translateY(0)}
+.s5-sub{font-size:14px;color:rgba(255,255,255,0.32);text-align:center;margin-top:12px;line-height:1.65;opacity:0;transition:opacity 0.5s ease 0.2s}
+.s5-sub.vis{opacity:1}
+.role-cards{width:100%;display:flex;flex-direction:column;gap:12px;margin-top:28px}
+.role-card{width:100%;border-radius:20px;padding:18px 20px;cursor:pointer;display:flex;align-items:center;gap:16px;border:1px solid rgba(255,255,255,0.08);opacity:0;transform:translateY(16px);transition:opacity 0.4s ease,transform 0.5s cubic-bezier(0.34,1.2,0.64,1),background 0.2s,border-color 0.2s}
+.role-card.vis{opacity:1;transform:translateY(0)}
+.role-card:active{transform:scale(0.97) !important}
+.role-driver{background:rgba(193,123,42,0.07)}
+.role-driver:hover{background:rgba(193,123,42,0.12);border-color:rgba(193,123,42,0.3)}
+.role-host{background:rgba(45,158,117,0.07)}
+.role-host:hover{background:rgba(45,158,117,0.12);border-color:rgba(45,158,117,0.3)}
+.role-icon{width:50px;height:50px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.role-icon-driver{background:rgba(193,123,42,0.15);border:1px solid rgba(193,123,42,0.25)}
+.role-icon-host{background:rgba(45,158,117,0.15);border:1px solid rgba(45,158,117,0.3)}
+.role-info{flex:1}
+.role-name{font-size:16px;font-weight:800;color:white;letter-spacing:-0.3px}
+.role-desc{font-size:12px;color:rgba(255,255,255,0.35);margin-top:4px;line-height:1.4}
+.role-arrow{font-size:17px;color:rgba(255,255,255,0.2)}
+.s5-confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+
+/* ════ KEYFRAMES ════ */
+@keyframes ringPulse{0%,100%{opacity:0.4;transform:translate(-50%,-50%) scale(1)}50%{opacity:0.12;transform:translate(-50%,-50%) scale(1.04)}}
+@keyframes logoIn{from{opacity:0;transform:scale(0.4) rotate(-10deg)}to{opacity:1;transform:scale(1) rotate(0deg)}}
+@keyframes nameReveal{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes loaderFill{from{width:0%}to{width:100%}}
+@keyframes particleFloat{0%{opacity:0;transform:translateY(0) scale(0)}20%{opacity:0.6;transform:translateY(-20px) scale(1)}100%{opacity:0;transform:translateY(-80px) scale(0.5)}}
+@keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(15px,-18px) scale(1.05)}66%{transform:translate(-10px,14px) scale(0.96)}}
+@keyframes pinPulse{0%,100%{box-shadow:0 0 0 3px rgba(193,123,42,0.3),0 0 14px rgba(193,123,42,0.5)}50%{box-shadow:0 0 0 7px rgba(193,123,42,0.1),0 0 24px rgba(193,123,42,0.3)}}
+@keyframes pinPulseGreen{0%,100%{box-shadow:0 0 0 3px rgba(45,158,117,0.3),0 0 14px rgba(45,158,117,0.5)}50%{box-shadow:0 0 0 7px rgba(45,158,117,0.1),0 0 24px rgba(45,158,117,0.3)}}
+@keyframes kantoGrad{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes slideOutLeft{to{opacity:0;transform:translateX(-60px) scale(0.97)}}
+@keyframes slideOutRight{to{opacity:0;transform:translateX(60px) scale(0.97)}}
+@keyframes slideInRight{from{opacity:0;transform:translateX(60px) scale(0.97)}to{opacity:1;transform:translateX(0) scale(1)}}
+@keyframes slideInLeft{from{opacity:0;transform:translateX(-60px) scale(0.97)}to{opacity:1;transform:translateX(0) scale(1)}}
+@keyframes confettiFall{to{transform:translateY(900px) rotate(720deg);opacity:0}}
+@keyframes userRing{0%{transform:translate(-50%,-50%) scale(1);opacity:0.6}100%{transform:translate(-50%,-50%) scale(3);opacity:0}}
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+  <div class="notch"></div>
+  <div class="progress-dots" id="pdots" style="display:none">
+    <div class="pdot act" id="pd0"></div>
+    <div class="pdot" id="pd1"></div>
+    <div class="pdot" id="pd2"></div>
+    <div class="pdot" id="pd3"></div>
+    <div class="pdot" id="pd4"></div>
+  </div>
+  <button class="skip-btn" id="skipbtn" style="display:none" onclick="goTo(5)">Skip</button>
+  <!-- <button class="next-btn" id="nextbtn" onclick="onNext()">Next →</button> -->
+
+  <!-- S0: SPLASH -->
+  <div class="screen active" id="s0">
+    <div class="splash-bg">
+      <div class="sb-ring"></div><div class="sb-ring"></div><div class="sb-ring"></div><div class="sb-ring"></div><div class="sb-ring"></div>
+    </div>
+    <div class="splash-center">
+      <div style="position:relative">
+        <div class="splash-particles" id="particles"></div>
+        <div class="logo-outer"><div class="logo-inner-ring"></div><span class="logo-k">K</span></div>
+      </div>
+      <div class="splash-name">KANTO</div>
+      <div class="splash-tagline">Right around the corner</div>
+      <div class="splash-loader"><div class="splash-loader-fill"></div></div>
+    </div>
+  </div>
+
+  <!-- S1: PROBLEM -->
+  <div class="screen" id="s1">
+    <div class="welcome-bg">
+      <div class="w-orb w-orb-1"></div><div class="w-orb w-orb-2"></div><div class="w-orb w-orb-3"></div>
+    </div>
+    <div class="welcome-wrap" style="position:relative;z-index:1;padding:0 36px">
+      <div class="welcome-eyebrow" id="w-eyebrow" style="opacity:0">The parking problem</div>
+      <div class="welcome-title" id="w-title" style="opacity:0">Too many cars.<br><span class="kanto-grad">Too few spots.</span></div>
+      <div class="welcome-divider" id="w-div" style="opacity:0"></div>
+      <div class="w-stat-callout" id="w-stat" style="opacity:0"><strong>3.5M+ vehicles</strong>in Metro Cebu and growing — yet parking infrastructure hasn't kept up.</div>
+      <div class="w-solution" id="w-solve" style="opacity:0">There's a better way.</div>
+      <div class="welcome-desc" id="w-desc" style="opacity:0">Thousands of <em>unused driveways</em> and vacant lots sit idle every day. Kanto connects drivers who need parking with <em>hosts who have space</em> — safely and instantly.</div>
+    </div>
+    <div style="padding:28px 36px 100px;position:relative;z-index:1">
+      <button onclick="goTo(2)" style="width:100%;padding:15px;border-radius:14px;background:linear-gradient(135deg,#7C3D00,#C17B2A);color:white;border:none;font-size:15px;font-weight:800;cursor:pointer">See how it works →</button>
+    </div>
+  </div>
+
+  <!-- S2: MAP FEATURE -->
+  <div class="screen" id="s2">
+    <div class="s2-header" id="s2h">
+      <div class="s2-eyebrow">Find parking</div>
+      <div class="s2-title">Spots near you,<br><span>live on the map.</span></div>
+    </div>
+    <div class="s2-stage">
+      <div class="map-viewport" id="mapvp">
+        <div class="map-visual">
+          <div class="map-bg-tile"></div>
+          <!-- roads -->
+          <div class="map-road-h" style="top:48%;margin-top:-5px"></div>
+          <div class="map-road-h" style="top:72%;margin-top:-5px"></div>
+          <div class="map-road-v" style="left:38%;margin-left:-5px"></div>
+          <div class="map-road-v" style="left:68%;margin-left:-5px"></div>
+          <!-- road labels -->
+          <div class="road-label" style="top:48%;left:6%;margin-top:14px">P. del Rosario St.</div>
+          <div class="road-label" style="top:72%;left:42%;margin-top:14px">J. Osmeña St.</div>
+          <!-- pins -->
+          <div class="mpin mpin-amber" id="pin1" style="top:20%;left:30%">
+            <div class="mpin-bubble">₱30/hr</div>
+            <div class="mpin-dot"></div>
+          </div>
+          <div class="mpin mpin-green" id="pin2" style="top:55%;left:56%">
+            <div class="mpin-bubble">₱25/hr</div>
+            <div class="mpin-dot"></div>
+          </div>
+          <div class="mpin mpin-amber" id="pin3" style="top:28%;left:64%">
+            <div class="mpin-bubble">₱40/hr</div>
+            <div class="mpin-dot"></div>
+          </div>
+          <div class="mpin mpin-gray" id="pin4" style="top:65%;left:22%">
+            <div class="mpin-bubble">Full</div>
+            <div class="mpin-dot"></div>
+          </div>
+          <!-- user location -->
+          <div style="position:absolute;top:44%;left:42%">
+            <div class="user-ring" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+            <div class="user-dot" style="position:relative"></div>
+          </div>
+        </div>
+        <div class="spot-card-highlight">
+          <div class="sc-icon">🅿️</div>
+          <div class="sc-info">
+            <div class="sc-name">Mang Tito's Driveway</div>
+            <div class="sc-addr">Labangon, Cebu City · 120m away</div>
+            <div class="sc-badge">Available now</div>
+          </div>
+          <div>
+            <div class="sc-price">₱30/hr</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.3);text-align:right;margin-top:3px">or ₱200/day</div>
+          </div>
+        </div>
+      </div>
+      <div class="desc-cards">
+        <div class="desc-card desc-card-amber" id="dc1">
+          <div class="dc-icon">📡</div>
+          <div class="dc-text">
+            <div class="dc-title">Live availability, zero guessing</div>
+            <div class="dc-sub">Spot status updates in real time — green means go. No more driving in circles looking for space.</div>
+          </div>
+        </div>
+        <div class="desc-card desc-card-teal" id="dc2">
+          <div class="dc-icon">🛡️</div>
+          <div class="dc-text">
+            <div class="dc-title">Verified hosts, safe parking</div>
+            <div class="dc-sub">Every host is ID-verified. See CCTV coverage, ratings, and reviews before you book.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S3: BOOKING -->
+  <div class="screen" id="s3">
+    <div class="s3-header" id="s3h">
+      <div class="s3-eyebrow">Book a spot</div>
+      <div class="s3-title">Reserve in seconds,<br><span>pay via GCash.</span></div>
+    </div>
+    <div class="s3-stage">
+      <!-- Phone walkthrough -->
+      <div class="phone-wt" id="phonewt">
+        <div class="wt-phone-frame">
+          <div class="wt-status">
+            <span>9:41</span><span>●●●</span>
+          </div>
+          <div class="wt-topbar">
+            <span class="wt-back">‹</span>
+            <span class="wt-topbar-title">Book a spot</span>
+            <span class="wt-topbar-badge" id="wt-badge">Step 1 of 3</span>
+          </div>
+          <div class="wt-content" id="wt-content">
+            <!-- Step 1: Select spot -->
+            <div id="wt-step1">
+              <div class="wt-section">Selected spot</div>
+              <div class="wt-spot-row">
+                <div class="wt-spot-icon">🏠</div>
+                <div style="flex:1">
+                  <div class="wt-spot-name">Ate Rosa's Garage</div>
+                  <div class="wt-spot-addr">Mabolo, Cebu City</div>
+                </div>
+                <div class="wt-spot-price">₱25/hr</div>
+              </div>
+              <div class="wt-section" style="margin-top:8px">Booking type</div>
+              <div class="wt-type-row">
+                <div class="wt-type-btn sel">Hourly</div>
+                <div class="wt-type-btn">Daily</div>
+              </div>
+              <div class="wt-section" style="margin-top:8px">Schedule</div>
+              <div class="wt-time-row">
+                <div class="wt-time-field"><div class="wt-time-label">Date</div><div class="wt-time-val">Jun 15, 2025</div></div>
+                <div class="wt-time-field"><div class="wt-time-label">Start</div><div class="wt-time-val">9:00 AM</div></div>
+              </div>
+              <div class="wt-section" style="margin-top:8px">Duration</div>
+              <div class="wt-duration-row">
+                <div class="wt-dur-btn">1h</div>
+                <div class="wt-dur-btn sel">2h</div>
+                <div class="wt-dur-btn">3h</div>
+                <div class="wt-dur-btn">4h</div>
+                <div class="wt-dur-btn">All day</div>
+              </div>
+            </div>
+            <!-- Step 2: Payment (hidden initially) -->
+            <div id="wt-step2" style="display:none">
+              <div class="wt-section">Payment method</div>
+              <div class="wt-type-row">
+                <div class="wt-type-btn sel" style="color:#5AB0FF;border-color:rgba(90,176,255,0.4);background:rgba(90,176,255,0.1)">GCash</div>
+                <div class="wt-type-btn" style="color:#3DD68C">Maya</div>
+                <div class="wt-type-btn">Cash</div>
+              </div>
+              <div class="wt-section" style="margin-top:8px">Order summary</div>
+              <div style="background:rgba(255,255,255,0.04);border-radius:9px;padding:9px 10px;border:1px solid rgba(255,255,255,0.07)">
+                <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:10px;color:rgba(255,255,255,0.35)">2 hrs × ₱25</span><span style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.7)">₱50.00</span></div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:10px;color:rgba(255,255,255,0.35)">Service fee</span><span style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.7)">₱5.00</span></div>
+                <div style="height:1px;background:rgba(255,255,255,0.06);margin:5px 0"></div>
+                <div style="display:flex;justify-content:space-between"><span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.7)">Total</span><span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--teal-l)">₱55.00</span></div>
+              </div>
+            </div>
+            <!-- Step 3: Confirmed (hidden initially) -->
+            <div id="wt-step3" style="display:none;text-align:center;padding:8px 0">
+              <div style="width:44px;height:44px;border-radius:50%;background:rgba(45,158,117,0.2);border:1px solid rgba(45,158,117,0.4);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:20px">✓</div>
+              <div style="font-size:13px;font-weight:800;color:white;margin-bottom:4px">Booking confirmed!</div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.4);line-height:1.5">Ate Rosa has been notified.<br>Your spot is secured for Jun 15, 9 AM.</div>
+              <div style="margin-top:10px;background:rgba(45,158,117,0.08);border:1px solid rgba(45,158,117,0.2);border-radius:9px;padding:8px 10px">
+                <div style="font-size:9px;color:rgba(45,158,117,0.6);font-weight:700;letter-spacing:0.08em;margin-bottom:4px">BOOKING REFERENCE</div>
+                <div style="font-family:'DM Mono',monospace;font-size:13px;color:white;letter-spacing:2px">KNT-2025-4829</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Step dots -->
+      <div class="wt-steps" id="wtsteps">
+        <div class="wt-step">
+          <div class="wt-step-dot act" id="wsd0"></div>
+          <div class="wt-step-label act" id="wsl0">Schedule</div>
+        </div>
+        <div style="flex:1;height:1px;background:rgba(255,255,255,0.1);margin-bottom:12px"></div>
+        <div class="wt-step">
+          <div class="wt-step-dot" id="wsd1"></div>
+          <div class="wt-step-label" id="wsl1">Payment</div>
+        </div>
+        <div style="flex:1;height:1px;background:rgba(255,255,255,0.1);margin-bottom:12px"></div>
+        <div class="wt-step">
+          <div class="wt-step-dot" id="wsd2"></div>
+          <div class="wt-step-label" id="wsl2">Confirmed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S4: EARNINGS -->
+  <div class="screen" id="s4">
+    <div class="s4-header" id="s4h">
+      <div class="s4-eyebrow">For hosts</div>
+      <div class="s4-title">Your driveway.<br><span>Passive income.</span></div>
+    </div>
+    <div class="s4-stage">
+      <div class="earn-card" id="earncard">
+        <div class="earn-label">Total earned this month</div>
+        <div class="earn-amount"><span>₱</span><span id="earnval">0</span></div>
+        <div class="earn-sub">From 14 bookings · Labangon, Cebu</div>
+        <div class="earn-bar-wrap">
+          <div class="earn-bar-label"><span>June 1</span><span>June 30</span></div>
+          <div class="earn-bar-track"><div class="earn-bar-fill" id="earnbar"></div></div>
+        </div>
+      </div>
+      <div class="earn-stats">
+        <div class="earn-stat" id="es1"><div class="earn-stat-val">14</div><div class="earn-stat-label">Bookings</div></div>
+        <div class="earn-stat" id="es2"><div class="earn-stat-val">5.0</div><div class="earn-stat-label">Rating</div></div>
+        <div class="earn-stat" id="es3"><div class="earn-stat-val">98%</div><div class="earn-stat-label">Acceptance</div></div>
+      </div>
+      <div class="req-item" id="ri1">
+        <div class="req-avatar">MR</div>
+        <div class="req-info"><div class="req-name">Maria Reyes</div><div class="req-meta">Jun 16 · 8 AM – 10 AM · Toyota Vios</div></div>
+        <div class="req-badge">Pending</div>
+      </div>
+      <div class="req-item" id="ri2">
+        <div class="req-avatar" style="background:rgba(45,158,117,0.18);color:#A8D5C0">JD</div>
+        <div class="req-info"><div class="req-name">Juan Dela Cruz</div><div class="req-meta">Jun 15 · 9 AM – 11 AM · Innova</div></div>
+        <div class="req-badge acc">Confirmed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S5: ROLE SELECT -->
+  <div class="screen" id="s5">
+    <div class="s5-bg"><div class="s5-orb-1"></div><div class="s5-orb-2"></div></div>
+    <div class="s5-confetti" id="celebconf"></div>
+    <div class="s5-content">
+      <div class="s5-logo" id="s5logo"><span>KANTO</span></div>
+      <div class="s5-headline" id="s5head">How will you<br>use Kanto?</div>
+      <div class="s5-sub" id="s5sub">You can always switch roles from your profile — be both a driver and a host.</div>
+      <div class="role-cards">
+        <div class="role-card role-driver" id="rc1">
+          <div class="role-icon role-icon-driver">🚗</div>
+          <div class="role-info"><div class="role-name">I'm a driver</div><div class="role-desc">Find safe, affordable parking near me — in seconds.</div></div>
+          <div class="role-arrow">→</div>
+        </div>
+        <div class="role-card role-host" id="rc2">
+          <div class="role-icon role-icon-host">🏠</div>
+          <div class="role-info"><div class="role-name">I'm a host</div><div class="role-desc">List my driveway or lot and earn passive income.</div></div>
+          <div class="role-arrow">→</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SCREENS = ['s0','s1','s2','s3','s4','s5'];
+let current = 0;
+const TRANSITION_MS = 340;
+let wtStep = 0; // walkthrough step for S3
+let wtTimer = null;
+
+function updateDots(n) {
+  const pdots = document.getElementById('pdots');
+  const skipbtn = document.getElementById('skipbtn');
+  const nextbtn = document.getElementById('nextbtn');
+  if (n === 0) { pdots.style.display='none'; skipbtn.style.display='none'; nextbtn.style.display='none'; return; }
+  pdots.style.display = 'flex';
+  skipbtn.style.display = n < 5 ? 'block' : 'none';
+  nextbtn.style.display = n >= 1 && n < 5 ? 'block' : 'none';
+  for (let i = 0; i < 5; i++) {
+    const d = document.getElementById('pd' + i);
+    d.className = 'pdot' + (i === n-1 ? ' act' : '');
+  }
+}
+
+function onNext() {
+  if (current < SCREENS.length - 1) goTo(current + 1);
+}
+
+// ─── S2: pin pop-in + zoom ───
+function enterS2() {
+  setTimeout(() => document.getElementById('s2h').classList.add('vis'), 80);
+  const vp = document.getElementById('mapvp');
+  setTimeout(() => vp.classList.add('vis'), 220);
+  // pins stagger in with their rates
+  const pins = [['pin1',600],['pin2',820],['pin3',1000],['pin4',1180]];
+  pins.forEach(([id,delay]) => {
+    setTimeout(() => document.getElementById(id).classList.add('pop'), delay);
+  });
+  // desc cards
+  setTimeout(() => document.getElementById('dc1').classList.add('vis'), 1400);
+  setTimeout(() => document.getElementById('dc2').classList.add('vis'), 1580);
+}
+
+// ─── S3: phone walkthrough auto-advance ───
+function enterS3() {
+  setTimeout(() => document.getElementById('s3h').classList.add('vis'), 80);
+  setTimeout(() => {
+    document.getElementById('phonewt').classList.add('vis');
+    document.getElementById('wtsteps').classList.add('vis');
+  }, 300);
+  wtStep = 0;
+  setWtStep(0);
+  // auto advance steps
+  if (wtTimer) clearTimeout(wtTimer);
+  wtTimer = setTimeout(() => advanceWt(1), 1800);
+}
+
+function setWtStep(step) {
+  wtStep = step;
+  ['wt-step1','wt-step2','wt-step3'].forEach((id,i) => {
+    document.getElementById(id).style.display = i === step ? 'block' : 'none';
+  });
+  const badge = document.getElementById('wt-badge');
+  badge.textContent = `Step ${step+1} of 3`;
+  // update step dots
+  for (let i = 0; i < 3; i++) {
+    const dot = document.getElementById('wsd'+i);
+    const lbl = document.getElementById('wsl'+i);
+    dot.className = 'wt-step-dot' + (i <= step ? ' act' : '');
+    lbl.className = 'wt-step-label' + (i <= step ? ' act' : '');
+  }
+}
+
+function advanceWt(step) {
+  if (current !== 3) return;
+  setWtStep(step);
+  if (step < 2) {
+    wtTimer = setTimeout(() => advanceWt(step + 1), step === 1 ? 1600 : 1600);
+  }
+}
+
+const enterFns = {
+  1: () => {
+    const fade = (id, delay) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      setTimeout(() => { el.style.transition='opacity 0.6s ease,transform 0.6s cubic-bezier(0.16,1,0.3,1)'; el.style.opacity=1; el.style.transform='none'; }, delay);
+    };
+    fade('w-eyebrow',100); fade('w-title',300); fade('w-div',550);
+    fade('w-stat',700); fade('w-solve',950); fade('w-desc',1150);
+  },
+  2: enterS2,
+  3: enterS3,
+  4: () => {
+    setTimeout(() => document.getElementById('s4h').classList.add('vis'), 100);
+    setTimeout(() => {
+      document.getElementById('earncard').classList.add('vis');
+      setTimeout(() => { document.getElementById('earnbar').style.width = '72%'; }, 300);
+      let v = 0; const target = 1240;
+      const iv = setInterval(() => { v = Math.min(v+42,target); document.getElementById('earnval').textContent=v.toLocaleString(); if(v>=target)clearInterval(iv); }, 30);
+    }, 280);
+    ['es1','es2','es3'].forEach((id,i) => setTimeout(() => document.getElementById(id).classList.add('vis'), 700+i*120));
+    setTimeout(() => document.getElementById('ri1').classList.add('vis'), 1100);
+    setTimeout(() => document.getElementById('ri2').classList.add('vis'), 1280);
+  },
+  5: () => {
+    setTimeout(() => document.getElementById('s5logo').classList.add('vis'), 100);
+    spawnConfetti();
+    setTimeout(() => document.getElementById('s5head').classList.add('vis'), 400);
+    setTimeout(() => document.getElementById('s5sub').classList.add('vis'), 650);
+    setTimeout(() => document.getElementById('rc1').classList.add('vis'), 900);
+    setTimeout(() => document.getElementById('rc2').classList.add('vis'), 1080);
+  }
+};
+
+function resetScreen(n) {
+  if (n===1) ['w-eyebrow','w-title','w-div','w-stat','w-solve','w-desc'].forEach(id=>{const el=document.getElementById(id);if(el){el.style.opacity=0;el.style.transform='translateY(16px)'}});
+  if (n===2) {
+    document.getElementById('s2h').classList.remove('vis');
+    const vp = document.getElementById('mapvp');
+    vp.classList.remove('vis');
+    vp.style.transform = 'scale(1.08)'; vp.style.opacity = '0';
+    ['pin1','pin2','pin3','pin4'].forEach(id => document.getElementById(id).classList.remove('pop'));
+    ['dc1','dc2'].forEach(id => document.getElementById(id).classList.remove('vis'));
+  }
+  if (n===3) {
+    if (wtTimer) clearTimeout(wtTimer);
+    document.getElementById('s3h').classList.remove('vis');
+    document.getElementById('phonewt').classList.remove('vis');
+    document.getElementById('wtsteps').classList.remove('vis');
+    setWtStep(0);
+  }
+  if (n===4) {
+    document.getElementById('s4h').classList.remove('vis');
+    document.getElementById('earncard').classList.remove('vis');
+    document.getElementById('earnbar').style.width='0%';
+    document.getElementById('earnval').textContent='0';
+    ['es1','es2','es3','ri1','ri2'].forEach(id=>document.getElementById(id).classList.remove('vis'));
+  }
+  if (n===5) {
+    ['s5logo','s5head','s5sub','rc1','rc2'].forEach(id=>document.getElementById(id).classList.remove('vis'));
+    document.getElementById('celebconf').innerHTML='';
+  }
+}
+
+function goTo(n) {
+  if (n===current) return;
+  const dir = n>current ? 1 : -1;
+  const prev = document.getElementById(SCREENS[current]);
+  const next = document.getElementById(SCREENS[n]);
+  prev.style.pointerEvents='none';
+  prev.style.animation = dir>0 ? `slideOutLeft ${TRANSITION_MS}ms cubic-bezier(0.4,0,1,1) both` : `slideOutRight ${TRANSITION_MS}ms cubic-bezier(0.4,0,1,1) both`;
+  setTimeout(() => { prev.classList.remove('active'); prev.style.animation=''; prev.style.pointerEvents=''; }, TRANSITION_MS);
+  resetScreen(n);
+  current = n;
+  updateDots(n);
+  next.style.animation = dir>0 ? `slideInRight ${TRANSITION_MS+60}ms cubic-bezier(0.16,1,0.3,1) both` : `slideInLeft ${TRANSITION_MS+60}ms cubic-bezier(0.16,1,0.3,1) both`;
+  next.classList.add('active');
+  if (enterFns[n]) setTimeout(() => enterFns[n](), 60);
+}
+
+setTimeout(() => { if (current===0) goTo(1); }, 3000);
+
+function spawnParticles() {
+  const c = document.getElementById('particles'); if(!c) return;
+  for(let i=0;i<12;i++){const p=document.createElement('div');p.className='particle';p.style.left=(20+Math.random()*60)+'%';p.style.top=(30+Math.random()*40)+'%';p.style.width=p.style.height=(2+Math.random()*4)+'px';p.style.animationDuration=(2+Math.random()*3)+'s';p.style.animationDelay=Math.random()*2+'s';c.appendChild(p);}
+}
+spawnParticles();
+
+function spawnConfetti() {
+  const c = document.getElementById('celebconf'); if(!c) return;
+  const colors=['#C17B2A','#E8A84A','#F0C080','#2D9E75','#A8D5C0','#FFF','#E86A4A'];
+  for(let i=0;i<48;i++){const el=document.createElement('div');const size=4+Math.random()*7;el.style.cssText=`position:absolute;width:${size}px;height:${size}px;border-radius:${Math.random()>0.5?'50%':'2px'};background:${colors[Math.floor(Math.random()*colors.length)]};left:${Math.random()*100}%;top:-10px;opacity:${0.5+Math.random()*0.5};animation:confettiFall ${1.2+Math.random()*1.6}s cubic-bezier(0.25,0.46,0.45,0.94) ${Math.random()*0.8}s both;`;c.appendChild(el);}
+}
+
+// Swipe/drag
+let sx=0;
+const phone=document.getElementById('phone');
+phone.addEventListener('touchstart',e=>{sx=e.touches[0].clientX},{passive:true});
+phone.addEventListener('touchend',e=>{
+  const diff=sx-e.changedTouches[0].clientX;
+  if(Math.abs(diff)>50){if(diff>0&&current<SCREENS.length-1)goTo(current+1);else if(diff<0&&current>0)goTo(current-1);}
+},{passive:true});
+let mx=0,drag=false;
+phone.addEventListener('mousedown',e=>{mx=e.clientX;drag=true});
+window.addEventListener('mouseup',e=>{
+  if(!drag)return;drag=false;
+  const diff=mx-e.clientX;
+  if(Math.abs(diff)>40){if(diff>0&&current<SCREENS.length-1)goTo(current+1);else if(diff<0&&current>0)goTo(current-1);}
+});
+</script>
+</body>
+</html>
