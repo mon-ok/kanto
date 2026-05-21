@@ -29,6 +29,11 @@ export default function TabLayout() {
     setAppState(state);
   };
 
+  // Expose transition function globally so index.tsx can trigger Logout
+  React.useEffect(() => {
+    (global as any).updateAppState = updateAppState;
+  }, []);
+
   return (
     <ThemeProvider value={customTheme}>
       <View style={{ flex: 1, backgroundColor: '#fffdeb' }}>

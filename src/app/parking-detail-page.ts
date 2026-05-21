@@ -28,12 +28,16 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
     'Manual Gate':        '&#128272;',
   };
 
-  const extraImages = [
-    'https://images.unsplash.com/photo-1573348722427-f1d6819fdf98?w=800&auto=format&fit=crop&q=70',
-    'https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=800&auto=format&fit=crop&q=70',
-    'https://images.unsplash.com/photo-1621905252507-b354bc25edac?w=800&auto=format&fit=crop&q=70',
+  const FALLBACK_IMAGES: string[] = [
+    'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=800&q=80',
+    'https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=800&q=80',
+    'https://images.unsplash.com/photo-1573804630927-ea5a09a5bae4?w=800&q=80',
+    'https://images.unsplash.com/photo-1555626906-fcf10d6851b4?w=800&q=80',
+    'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=800&q=80',
   ];
-  const allImages: string[] = [spot.image, ...extraImages].filter(Boolean);
+  const allImages: string[] = Array.isArray(spot.images) && spot.images.length > 0
+    ? spot.images
+    : [spot.image, ...FALLBACK_IMAGES].filter(Boolean);
   const ratingNum = (spot.rating || 4.5).toFixed(1);
   const reviewCount = SAMPLE_REVIEWS.length;
   const location = spot.location || 'Metro Manila, Philippines';

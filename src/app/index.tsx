@@ -1,28 +1,26 @@
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  ActivityIndicator,
-  SafeAreaView,
-  Animated,
-  PanResponder,
-  ScrollView,
-  Dimensions,
-  TouchableWithoutFeedback,
-  Alert,
-  Modal,
-  TextInput,
-  KeyboardAvoidingView,
-  Switch,
-} from 'react-native';
+import { buildParkingDetailPage } from '@/app/parking-detail-page';
+import { BrandColors, Spacing } from '@/constants/theme';
 import { Image } from 'expo-image';
 import * as Location from 'expo-location';
 import { SymbolView } from 'expo-symbols';
-import { BrandColors, Spacing } from '@/constants/theme';
-import { buildParkingDetailPage } from '@/app/parking-detail-page';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Animated,
+  KeyboardAvoidingView,
+  Modal,
+  PanResponder,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View
+} from 'react-native';
 
 // Safely require react-native-webview on native platforms only
 let WebView: any;
@@ -919,14 +917,14 @@ export default function MapScreen() {
   const confirmBooking = () => {
     if (!modalTargetSpace) return;
     const space = modalTargetSpace;
-    
+
     setBookedSpot(space);
     setBookedSpotId(space.id);
     setHasArrived(false);
     setTimeToArrive(1800);
     setParkingTime(0);
     hasDrawnRoute.current = false;
-    
+
     // Zoom & Route
     setTimeout(() => {
       focusSpotOnMap(space.id);
@@ -998,14 +996,14 @@ export default function MapScreen() {
       },
       onPanResponderMove: (_, gestureState) => {
         let nextValue = lastOffset.current + gestureState.dy;
-        
+
         // Organic rubber-band resistance when dragging beyond snap boundaries
         if (nextValue < snapExpanded) {
           nextValue = snapExpanded + (nextValue - snapExpanded) * 0.25;
         } else if (nextValue > snapCollapsed) {
           nextValue = snapCollapsed + (nextValue - snapCollapsed) * 0.25;
         }
-        
+
         translateY.setValue(nextValue - lastOffset.current);
       },
       onPanResponderRelease: (_, gestureState) => {
@@ -1096,9 +1094,9 @@ export default function MapScreen() {
         console.warn('Error starting position watcher:', e);
       }
     };
-    
+
     startWatching();
-    
+
     return () => {
       if (subscription) {
         subscription.remove();
@@ -1190,14 +1188,14 @@ export default function MapScreen() {
   const handleRequestDeparturePress = () => {
     if (!bookedSpot) return;
     setFinalOccupiedTime(parkingTime);
-    
+
     const hourlyRate = (bookedSpot.prices as Record<string, number>)[selectedVehicle] ?? 0;
     // Reservation fee covers the first 30 minutes (1800 seconds) of parking free of charge
     const billableTime = Math.max(0, parkingTime - 1800);
     const computedFee = (billableTime / 3600) * hourlyRate;
     const amount = Number(computedFee.toFixed(2));
     setFinalAmount(amount);
-    
+
     setDeparturePhase('requesting');
     setActiveModal('departure');
   };
@@ -1267,7 +1265,7 @@ export default function MapScreen() {
     if (Platform.OS === 'web') {
       // Precompute detail pages as Blob URLs stored on parent window (reliable new-tab open)
       const prevUrls: Record<string, string> = (window as any).__kantoDetailUrls || {};
-      Object.values(prevUrls).forEach((u: any) => { try { URL.revokeObjectURL(u); } catch(_) {} });
+      Object.values(prevUrls).forEach((u: any) => { try { URL.revokeObjectURL(u); } catch (_) { } });
       const urls: Record<string, string> = {};
       markers.forEach((spot: any) => {
         const html = buildParkingDetailPage(spot, spot.id === bookedSpotId, hasArrived, selectedVehicle);
@@ -1307,7 +1305,7 @@ export default function MapScreen() {
   ) => {
     const vehicleObj = VEHICLES.find((v) => v.id === vehicleId);
     const vehicleLabel = vehicleObj ? vehicleObj.name : 'Vehicle';
-    
+
     const activeSpotId = overrideBookedSpotId !== undefined ? overrideBookedSpotId : bookedSpotId;
 
     // Only display the booked space if booked, otherwise filter by vehicle suitability and active filters
@@ -1434,7 +1432,7 @@ export default function MapScreen() {
               setTimeToArrive(1800);
               setParkingTime(0);
               hasDrawnRoute.current = false;
-              
+
               setTimeout(() => {
                 focusSpotOnMap(data.spotId);
                 if (coords) {
@@ -1481,7 +1479,7 @@ export default function MapScreen() {
             setTimeToArrive(1800);
             setParkingTime(0);
             hasDrawnRoute.current = false;
-            
+
             setTimeout(() => {
               focusSpotOnMap(data.spotId);
               if (coords) {
@@ -1765,39 +1763,39 @@ export default function MapScreen() {
 
                 <View style={styles.divider} />
 
-            {/* Recently Parked Spaces Section */}
-            <View style={styles.pastSpacesSection}>
-              <Text style={styles.sectionTitle}>Recently Parked Spaces</Text>
-              {BASE_PARKING_SPACES.filter(
-                (spot) => RECENT_SPACES_IDS.includes(spot.id) && spot.vehicles.includes(selectedVehicle)
-              ).length === 0 ? (
-                <Text style={styles.noSpacesText}>No recently parked spaces for this vehicle type.</Text>
-              ) : (
-                BASE_PARKING_SPACES
-                  .filter((spot) => RECENT_SPACES_IDS.includes(spot.id) && spot.vehicles.includes(selectedVehicle))
-                  .map((space) => (
-                    <TouchableOpacity
-                      key={space.id}
-                      style={styles.recentSpaceItem}
-                      onPress={() => focusSpotOnMap(space.id)}
-                      activeOpacity={0.75}
-                    >
-                      <View style={styles.recentSpaceLeft}>
-                        <View style={styles.recentSpaceIconContainer}>
-                          <Text style={styles.recentSpaceIcon}>🕒</Text>
-                        </View>
-                        <Text style={styles.recentSpaceName} numberOfLines={1}>
-                          {space.name}
-                        </Text>
-                      </View>
-                      <View style={styles.recentSpaceRight}>
-                        <Text style={styles.recentSpaceArrow}>→</Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))
-              )}
-            </View>
-            </>
+                {/* Recently Parked Spaces Section */}
+                <View style={styles.pastSpacesSection}>
+                  <Text style={styles.sectionTitle}>Recently Parked Spaces</Text>
+                  {BASE_PARKING_SPACES.filter(
+                    (spot) => RECENT_SPACES_IDS.includes(spot.id) && spot.vehicles.includes(selectedVehicle)
+                  ).length === 0 ? (
+                    <Text style={styles.noSpacesText}>No recently parked spaces for this vehicle type.</Text>
+                  ) : (
+                    BASE_PARKING_SPACES
+                      .filter((spot) => RECENT_SPACES_IDS.includes(spot.id) && spot.vehicles.includes(selectedVehicle))
+                      .map((space) => (
+                        <TouchableOpacity
+                          key={space.id}
+                          style={styles.recentSpaceItem}
+                          onPress={() => focusSpotOnMap(space.id)}
+                          activeOpacity={0.75}
+                        >
+                          <View style={styles.recentSpaceLeft}>
+                            <View style={styles.recentSpaceIconContainer}>
+                              <Text style={styles.recentSpaceIcon}>🕒</Text>
+                            </View>
+                            <Text style={styles.recentSpaceName} numberOfLines={1}>
+                              {space.name}
+                            </Text>
+                          </View>
+                          <View style={styles.recentSpaceRight}>
+                            <Text style={styles.recentSpaceArrow}>→</Text>
+                          </View>
+                        </TouchableOpacity>
+                      ))
+                  )}
+                </View>
+              </>
             )}
           </ScrollView>
         </Animated.View>
@@ -1872,7 +1870,7 @@ export default function MapScreen() {
                 <Text style={styles.modalDesc}>
                   Reserve a slot at <Text style={styles.boldText}>{modalTargetSpace.name}</Text> for your <Text style={styles.boldText}>{VEHICLES.find(v => v.id === selectedVehicle)?.name || 'vehicle'}</Text>. The reservation fee covers the first 30 minutes of parking free of charge.
                 </Text>
-                
+
                 <View style={styles.bookingSummaryBox}>
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Vehicle Type:</Text>
@@ -1927,7 +1925,7 @@ export default function MapScreen() {
                     </Text>
                   </View>
                 </View>
-                
+
                 <TouchableOpacity style={[styles.modalPrimaryBtn, { width: '100%', marginTop: Spacing.three }]} onPress={() => setActiveModal(null)}>
                   <Text style={styles.modalPrimaryText}>View Directions</Text>
                 </TouchableOpacity>
@@ -1972,7 +1970,7 @@ export default function MapScreen() {
                 <Text style={[styles.modalDesc, { textAlign: 'center' }]}>
                   Your reservation was successfully cancelled. Note: The reservation fee is non-refundable.
                 </Text>
-                
+
                 <TouchableOpacity style={[styles.modalPrimaryBtn, { width: '100%', marginTop: Spacing.three }]} onPress={() => setActiveModal(null)}>
                   <Text style={styles.modalPrimaryText}>Got it</Text>
                 </TouchableOpacity>
@@ -1988,7 +1986,7 @@ export default function MapScreen() {
                 <Text style={[styles.modalDesc, { textAlign: 'center' }]}>
                   You have successfully arrived at your booked parking space at <Text style={styles.boldText}>{bookedSpot?.name}</Text>. Your parking duration stopwatch has started.
                 </Text>
-                
+
                 <TouchableOpacity style={[styles.modalPrimaryBtn, { width: '100%', marginTop: Spacing.three }]} onPress={() => setActiveModal(null)}>
                   <Text style={styles.modalPrimaryText}>OK</Text>
                 </TouchableOpacity>
@@ -2004,7 +2002,7 @@ export default function MapScreen() {
                 <Text style={[styles.modalDesc, { textAlign: 'center' }]}>
                   You did not arrive at <Text style={styles.boldText}>{bookedSpot?.name || 'the parking space'}</Text> in time. Your reservation has been cancelled. Note: Reservation fee is non-refundable.
                 </Text>
-                
+
                 <TouchableOpacity style={[styles.modalPrimaryBtn, { width: '100%', marginTop: Spacing.three }]} onPress={() => setActiveModal(null)}>
                   <Text style={styles.modalPrimaryText}>Got it</Text>
                 </TouchableOpacity>
@@ -2199,7 +2197,7 @@ export default function MapScreen() {
                 <Text style={[styles.modalDesc, { textAlign: 'center', marginBottom: Spacing.three }]}>
                   We are sorry, but <Text style={styles.boldText}>{noSlotsSpotName}</Text> is currently full. Please try booking another parking space.
                 </Text>
-                
+
                 <TouchableOpacity
                   style={[styles.modalPrimaryBtn, { width: '100%', marginTop: Spacing.three }]}
                   onPress={() => setActiveModal(null)}
@@ -2388,7 +2386,7 @@ export default function MapScreen() {
                 </View>
               </View>
             )}
-            </View>
+          </View>
         </KeyboardAvoidingView>
       )}
     </SafeAreaView>

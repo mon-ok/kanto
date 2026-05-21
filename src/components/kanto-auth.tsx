@@ -18,9 +18,11 @@ interface KantoAuthProps {
 }
 
 const GoogleG = () => (
-  <View style={styles.googleIconContainer}>
-    <Text style={styles.googleIconText}>G</Text>
-  </View>
+  <Image
+    source={require('@/assets/images/google.png')}
+    style={{ width: 18, height: 18, marginRight: 10 }}
+    contentFit="contain"
+  />
 );
 
 const PhoneIcon = () => (
@@ -38,7 +40,7 @@ export function KantoAuth({ onLogin }: KantoAuthProps) {
 
   // Sign up states
   const [signupStep, setSignupStep] = useState<'options' | 'phone_input' | 'otp_verify'>('options');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('+63 ');
   const [otpCode, setOtpCode] = useState('');
 
   const handleLogin = () => {
@@ -107,7 +109,7 @@ export function KantoAuth({ onLogin }: KantoAuthProps) {
     setError('');
     // Reset signup state when switching tabs
     setSignupStep('options');
-    setPhoneNumber('');
+    setPhoneNumber('+63 ');
     setOtpCode('');
   };
 
@@ -259,10 +261,25 @@ export function KantoAuth({ onLogin }: KantoAuthProps) {
                     <Text style={styles.inputLabel}>Phone Number</Text>
                     <TextInput
                       style={styles.input}
-                      placeholder="+1 (555) 000-0000"
+                      placeholder="+63 917 123 4567"
                       placeholderTextColor="#8ca0ab"
                       value={phoneNumber}
-                      onChangeText={setPhoneNumber}
+                      onChangeText={(text) => {
+                        if (!text.startsWith('+63')) {
+                          if (text.length < 3) {
+                            setPhoneNumber('+63 ');
+                          } else {
+                            const digits = text.replace(/\D/g, '');
+                            if (digits.startsWith('63')) {
+                              setPhoneNumber('+' + digits.slice(0, 2) + ' ' + digits.slice(2));
+                            } else {
+                              setPhoneNumber('+63 ' + digits);
+                            }
+                          }
+                        } else {
+                          setPhoneNumber(text);
+                        }
+                      }}
                       keyboardType="phone-pad"
                       autoFocus
                       editable={!loading}
@@ -287,6 +304,7 @@ export function KantoAuth({ onLogin }: KantoAuthProps) {
                     onPress={() => {
                       setSignupStep('options');
                       setError('');
+                      setPhoneNumber('+63 ');
                     }}
                     disabled={loading}
                     activeOpacity={0.7}
