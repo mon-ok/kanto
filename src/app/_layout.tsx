@@ -1,11 +1,10 @@
 import { ThemeProvider, DefaultTheme } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { router } from 'expo-router';
+import { Slot } from 'expo-router';
 
 import { KantoSplash } from '@/components/kanto-splash';
 import { KantoAuth } from '@/components/kanto-auth';
-import AppTabs from '@/components/app-tabs';
 
 const customTheme = {
   ...DefaultTheme,
@@ -20,27 +19,31 @@ const customTheme = {
   },
 };
 
+let globalAppState: 'splash' | 'auth' | 'app' = 'splash';
+
 export default function TabLayout() {
-  const [appState, setAppState] = useState<'splash' | 'auth' | 'app'>('splash');
+  const [appState, setAppState] = useState<'splash' | 'auth' | 'app'>(globalAppState);
+
+  const updateAppState = (state: 'splash' | 'auth' | 'app') => {
+    globalAppState = state;
+    setAppState(state);
+  };
 
   return (
     <ThemeProvider value={customTheme}>
       <View style={{ flex: 1, backgroundColor: '#fffdeb' }}>
         {appState === 'splash' && (
-          <KantoSplash onFinish={() => setAppState('auth')} />
+          <KantoSplash onFinish={() => updateAppState('auth')} />
         )}
         {appState === 'auth' && (
           <KantoAuth
             onLogin={() => {
-              setAppState('app');
-              setTimeout(() => {
-                router.replace('/map' as any);
-              }, 100);
+              updateAppState('app');
             }}
           />
         )}
         {appState === 'app' && (
-          <AppTabs />
+          <Slot />
         )}
       </View>
     </ThemeProvider>
