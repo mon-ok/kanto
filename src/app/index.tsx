@@ -13,11 +13,13 @@ import {
   Dimensions,
   TouchableWithoutFeedback,
   Alert,
+  Modal,
 } from 'react-native';
 import { Image } from 'expo-image';
 import * as Location from 'expo-location';
 import { SymbolView } from 'expo-symbols';
 import { BrandColors, Spacing } from '@/constants/theme';
+import { buildParkingDetailPage } from '@/app/parking-detail-page';
 
 // Safely require react-native-webview on native platforms only
 let WebView: any;
@@ -152,8 +154,14 @@ const LEAFLET_HTML = `
       background: #fffdeb !important;
       color: #263f4f !important;
       border: 2px solid #263f4f !important;
-      border-radius: 12px !important;
-      box-shadow: 0 4px 12px rgba(38,63,79,0.15) !important;
+      border-radius: 16px !important;
+      box-shadow: 0 8px 24px rgba(38,63,79,0.18) !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+    }
+    .leaflet-popup-content {
+      margin: 0 !important;
+      width: auto !important;
     }
     .leaflet-popup-tip {
       background: #263f4f !important;
@@ -161,7 +169,119 @@ const LEAFLET_HTML = `
     .leaflet-popup-close-button {
       color: #263f4f !important;
       font-weight: bold !important;
-      font-size: 14px !important;
+      font-size: 16px !important;
+      top: 8px !important;
+      right: 10px !important;
+      z-index: 10 !important;
+    }
+    .popup-inner {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-width: 210px;
+      max-width: 240px;
+      padding: 14px 14px 10px 14px;
+    }
+    .popup-name {
+      margin: 0 0 8px 0;
+      color: #263f4f;
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.2;
+      padding-right: 18px;
+    }
+    .popup-price {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .popup-price-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+    }
+    .popup-price-value {
+      font-size: 13px;
+      font-weight: 800;
+      color: #f29221;
+    }
+    .popup-section-label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #263f4f;
+      margin-bottom: 4px;
+    }
+    .popup-vehicles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .popup-vehicle-badge {
+      background: rgba(10,124,110,0.08);
+      border: 1px solid rgba(10,124,110,0.2);
+      border-radius: 8px;
+      padding: 2px 7px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #0a7c6e;
+      white-space: nowrap;
+    }
+    .popup-slots {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .popup-slots-badge {
+      background: rgba(242,146,33,0.1);
+      border: 1px solid rgba(242,146,33,0.25);
+      border-radius: 8px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #f29221;
+    }
+    .popup-amenities {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+    .popup-amenity-badge {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 2px 7px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #475569;
+      white-space: nowrap;
+    }
+    .popup-view-more {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      background: #263f4f;
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 800;
+      text-align: center;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: background 0.15s;
+    }
+    .popup-view-more:hover {
+      background: #0a7c6e;
+    }
+    .popup-divider {
+      height: 1px;
+      background: rgba(38,63,79,0.08);
+      margin: 8px 0;
     }
   </style>
 </head>
@@ -186,9 +306,12 @@ const LEAFLET_HTML = `
 
     var userMarker = null;
     var activeMarkers = [];
+    var routePolyline = null;
 
-    function handleSetCenter(lat, lng, zoom) {
-      map.setView([lat, lng], zoom || 16);
+    function handleSetCenter(lat, lng, zoom, shouldCenter) {
+      if (shouldCenter !== false) {
+        map.setView([lat, lng], zoom || 16);
+      }
       if (userMarker) {
         userMarker.setLatLng([lat, lng]);
       } else {
@@ -199,6 +322,35 @@ const LEAFLET_HTML = `
           iconAnchor: [15, 15]
         });
         userMarker = L.marker([lat, lng], { icon: markerIcon }).addTo(map);
+      }
+    }
+
+    function handleDrawRoute(userLat, userLng, spotLat, spotLng, fitBounds) {
+      var latlngs = [
+        [userLat, userLng],
+        [spotLat, spotLng]
+      ];
+      if (routePolyline) {
+        routePolyline.setLatLngs(latlngs);
+      } else {
+        routePolyline = L.polyline(latlngs, {
+          color: '#0a7c6e',
+          weight: 6,
+          opacity: 0.8,
+          dashArray: '8, 12',
+          lineCap: 'round'
+        }).addTo(map);
+      }
+      if (fitBounds) {
+        var bounds = L.latLngBounds(latlngs);
+        map.fitBounds(bounds, { padding: [60, 60] });
+      }
+    }
+
+    function handleClearRoute() {
+      if (routePolyline) {
+        map.removeLayer(routePolyline);
+        routePolyline = null;
       }
     }
 
@@ -220,23 +372,73 @@ const LEAFLET_HTML = `
         });
 
         var m = L.marker([spot.latitude, spot.longitude], { icon: customIcon });
-        
-        // Add a beautiful custom popup
-        var popupContent = 
-          '<div style="font-family: sans-serif; min-width: 140px; padding: 4px 2px;">' +
-            '<h4 style="margin: 0 0 6px 0; color: #263f4f; font-size: 14px; font-weight: 800;">' + spot.name + '</h4>' +
-            '<p style="margin: 0; color: #64748b; font-size: 12px; font-weight: 600;">' +
-              'Price: <span style="color: #f29221; font-weight: 800;">' + spot.price + '</span>' +
-            '</p>' +
-            '<p style="margin: 4px 0 0 0; color: #0a7c6e; font-size: 10px; font-weight: 700; text-transform: uppercase;">' +
-              'Fits: ' + spot.vehicles.join(', ') +
-            '</p>' +
+        m.spotId = spot.id;
+        m.spotData = spot;
+
+        // Build vehicles badges
+        var vehicleBadges = (spot.allVehicles || []).map(function(v) {
+          return '<span class="popup-vehicle-badge">' + v + '</span>';
+        }).join('');
+
+        // Build amenity badges
+        var amenityBadges = (spot.amenities || []).map(function(a) {
+          return '<span class="popup-amenity-badge">' + a + '</span>';
+        }).join('');
+        // Build rich popup content
+        var popupContent =
+          '<div class="popup-inner">' +
+            '<h4 class="popup-name">' + spot.name + '</h4>' +
+            '<div class="popup-price">' +
+              '<span class="popup-price-label">' + spot.vehicleLabel + ' Price:</span>' +
+              '<span class="popup-price-value">&#8369;' + spot.priceNum + '/hr</span>' +
+            '</div>' +
+            '<div class="popup-divider"></div>' +
+            '<div class="popup-section-label">Vehicles</div>' +
+            '<div class="popup-vehicles">' + vehicleBadges + '</div>' +
+            '<div class="popup-slots">' +
+              '<span class="popup-section-label" style="margin-bottom:0">Slots:</span>' +
+              '<span class="popup-slots-badge">' + spot.slots + ' available</span>' +
+            '</div>' +
+            '<div class="popup-divider"></div>' +
+            '<div class="popup-section-label">Description</div>' +
+            '<div class="popup-amenities">' + amenityBadges + '</div>' +
+            '<button class="popup-view-more" data-spot-id="' + spot.id + '">' +
+              'View More &#8594;' +
+            '</button>' +
           '</div>';
 
-        m.bindPopup(popupContent);
+        m.bindPopup(popupContent, { maxWidth: 280 });
         m.addTo(map);
         activeMarkers.push(m);
       });
+    }
+
+    // Delegated click for View More buttons (avoids inline onclick escaping issues)
+    document.getElementById('map').addEventListener('click', function(e) {
+      var btn = e.target;
+      if (btn && btn.classList && btn.classList.contains('popup-view-more')) {
+        var spotId = btn.getAttribute('data-spot-id');
+        if (spotId) handleViewMore(spotId);
+      }
+    });
+
+
+    function handleViewMore(spotId) {
+      if (window.ReactNativeWebView) {
+        // Native: postMessage for Alert fallback
+        var spot = null;
+        for (var i = 0; i < activeMarkers.length; i++) {
+          if (activeMarkers[i].spotId === spotId) { spot = activeMarkers[i].spotData; break; }
+        }
+        if (spot) window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'viewMore', spot: spot }));
+        return;
+      }
+      // Web: open the prebuilt Blob URL from parent window directly (user-gesture context)
+      var urls = window.parent && window.parent.__kantoDetailUrls;
+      var url = urls && urls[spotId];
+      if (url) {
+        window.open(url, '_blank');
+      }
     }
 
     // Message listener for web/iframe
@@ -244,9 +446,21 @@ const LEAFLET_HTML = `
       try {
         var data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
         if (data && data.type === 'setCenter') {
-          handleSetCenter(data.lat, data.lng, data.zoom);
+          handleSetCenter(data.lat, data.lng, data.zoom, data.shouldCenter);
         } else if (data && data.type === 'setMarkers') {
           handleSetMarkers(data.markers);
+        } else if (data && data.type === 'focusSpot') {
+          var targetMarker = activeMarkers.find(function(m) {
+            return m.spotId === data.spotId;
+          });
+          if (targetMarker) {
+            map.setView(targetMarker.getLatLng(), data.zoom || 16);
+            targetMarker.openPopup();
+          }
+        } else if (data && data.type === 'drawRoute') {
+          handleDrawRoute(data.userLat, data.userLng, data.spotLat, data.spotLng, data.fitBounds);
+        } else if (data && data.type === 'clearRoute') {
+          handleClearRoute();
         }
       } catch (e) {
         // Silent catch
@@ -258,9 +472,21 @@ const LEAFLET_HTML = `
       try {
         var data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
         if (data && data.type === 'setCenter') {
-          handleSetCenter(data.lat, data.lng, data.zoom);
+          handleSetCenter(data.lat, data.lng, data.zoom, data.shouldCenter);
         } else if (data && data.type === 'setMarkers') {
           handleSetMarkers(data.markers);
+        } else if (data && data.type === 'focusSpot') {
+          var targetMarker = activeMarkers.find(function(m) {
+            return m.spotId === data.spotId;
+          });
+          if (targetMarker) {
+            map.setView(targetMarker.getLatLng(), data.zoom || 16);
+            targetMarker.openPopup();
+          }
+        } else if (data && data.type === 'drawRoute') {
+          handleDrawRoute(data.userLat, data.userLng, data.spotLat, data.spotLng, data.fitBounds);
+        } else if (data && data.type === 'clearRoute') {
+          handleClearRoute();
         }
       } catch (e) {
         // Silent catch
@@ -548,13 +774,57 @@ function RecenterIcon({ tintColor, size }: { tintColor: string; size: number }) 
   );
 }
 
+function getDistanceInMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371000; // meters
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function formatTimeToArrive(seconds: number) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+}
+
+function formatParkingTime(seconds: number) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+}
+
 export default function MapScreen() {
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedVehicle, setSelectedVehicle] = useState<string>('motorcycle');
+  const [viewMoreHtml, setViewMoreHtml] = useState<string | null>(null);
 
   const [expandedSpaces, setExpandedSpaces] = useState<Record<string, boolean>>({});
+
+  // Active booking states
+  const [bookedSpotId, setBookedSpotId] = useState<string | null>(null);
+  const [bookedSpot, setBookedSpot] = useState<any | null>(null);
+  const [hasArrived, setHasArrived] = useState(false);
+  const [timeToArrive, setTimeToArrive] = useState(1500); // 25 mins
+  const [parkingTime, setParkingTime] = useState(0);
+
+  // Custom Modals State
+  const [activeModal, setActiveModal] = useState<'confirm_book' | 'booking_confirmed' | 'cancel_confirm' | 'cancel_success' | 'arrived' | 'expired' | 'departure' | null>(null);
+  const [modalTargetSpace, setModalTargetSpace] = useState<any | null>(null);
+  const [modalTargetPrice, setModalTargetPrice] = useState<number>(0);
+  const [departurePhase, setDeparturePhase] = useState<'requesting' | 'confirmed'>('requesting');
+  const [finalOccupiedTime, setFinalOccupiedTime] = useState<number>(0);
+  const [finalAmount, setFinalAmount] = useState<number>(0);
+
+  const hasCenteredInitial = useRef(false);
+  const hasDrawnRoute = useRef(false);
 
   const toggleSpaceExpand = (spaceId: string) => {
     setExpandedSpaces((prev) => ({
@@ -564,26 +834,34 @@ export default function MapScreen() {
   };
 
   const handleBookPress = (space: any, price: number) => {
-    const selectedVehicleObj = VEHICLES.find((v) => v.id === selectedVehicle);
-    const selectedVehicleName = selectedVehicleObj ? selectedVehicleObj.name : 'Vehicle';
+    setModalTargetSpace(space);
+    setModalTargetPrice(price);
+    setActiveModal('confirm_book');
+  };
+
+  const confirmBooking = () => {
+    if (!modalTargetSpace) return;
+    const space = modalTargetSpace;
     
-    Alert.alert(
-      'Confirm Reservation',
-      `Would you like to book a slot at ${space.name} for your ${selectedVehicleName} at ₱${price}/hr?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Confirm',
-          onPress: () => {
-            Alert.alert(
-              'Booking Confirmed! 🎉',
-              `Successfully reserved a slot at ${space.name}.\n\nVehicle: ${selectedVehicleName}\nRate: ₱${price}/hr\n\nPlease arrive within 15 minutes.`,
-              [{ text: 'OK' }]
-            );
-          },
-        },
-      ]
-    );
+    setBookedSpot(space);
+    setBookedSpotId(space.id);
+    setHasArrived(false);
+    setTimeToArrive(1500);
+    setParkingTime(0);
+    hasDrawnRoute.current = false;
+    
+    // Zoom & Route
+    setTimeout(() => {
+      focusSpotOnMap(space.id);
+      if (coords) {
+        const spotLat = coords.latitude + space.offsetLat;
+        const spotLng = coords.longitude + space.offsetLng;
+        drawRouteOnMap(coords.latitude, coords.longitude, spotLat, spotLng, true);
+        hasDrawnRoute.current = true;
+      }
+    }, 500);
+
+    setActiveModal('booking_confirmed');
   };
 
   const webviewRef = useRef<any>(null);
@@ -698,11 +976,176 @@ export default function MapScreen() {
 
   useEffect(() => {
     requestLocation();
+
+    let subscription: any = null;
+    const startWatching = async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+          subscription = await Location.watchPositionAsync(
+            {
+              accuracy: Location.Accuracy.High,
+              timeInterval: 2000,
+              distanceInterval: 3,
+            },
+            (location) => {
+              setCoords({
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+              });
+            }
+          );
+        }
+      } catch (e) {
+        console.warn('Error starting position watcher:', e);
+      }
+    };
+    
+    startWatching();
+    
+    return () => {
+      if (subscription) {
+        subscription.remove();
+      }
+    };
   }, []);
 
+  // Distance tracking useEffect to trigger automatic arrival
+  useEffect(() => {
+    if (coords && bookedSpotId && !hasArrived) {
+      const spot = BASE_PARKING_SPACES.find(s => s.id === bookedSpotId);
+      if (spot) {
+        const spotLat = coords.latitude + spot.offsetLat;
+        const spotLng = coords.longitude + spot.offsetLng;
+        const dist = getDistanceInMeters(coords.latitude, coords.longitude, spotLat, spotLng);
+        if (dist <= 35) { // 35 meters threshold
+          setHasArrived(true);
+          setActiveModal('arrived');
+        }
+      }
+    }
+  }, [coords, bookedSpotId, hasArrived]);
+
+  // Timers useEffect
+  useEffect(() => {
+    if (!bookedSpotId) {
+      setTimeToArrive(1500);
+      setParkingTime(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      if (!hasArrived) {
+        setTimeToArrive((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            setActiveModal('expired');
+            handleCancelBooking(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      } else {
+        setParkingTime((prev) => prev + 1);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [bookedSpotId, hasArrived]);
+
+  // 3-second departure request watcher
+  useEffect(() => {
+    if (activeModal === 'departure' && departurePhase === 'requesting') {
+      const timer = setTimeout(() => {
+        setDeparturePhase('confirmed');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [activeModal, departurePhase]);
+
+  const handleCancelBooking = (showFeedback = true) => {
+    setBookedSpotId(null);
+    setBookedSpot(null);
+    setHasArrived(false);
+    setTimeToArrive(1500);
+    setParkingTime(0);
+    hasDrawnRoute.current = false;
+    clearRouteOnMap();
+    if (coords) {
+      const filtered = buildMarkersPayload(selectedVehicle, coords, null);
+      sendMarkersToMap(filtered);
+    }
+    if (showFeedback) {
+      setActiveModal('cancel_success');
+    }
+  };
+
+  const handleCancelBookingPress = () => {
+    setActiveModal('cancel_confirm');
+  };
+
+  const simulateArrival = () => {
+    setHasArrived(true);
+    setActiveModal('arrived');
+  };
+
+  const handleRequestDeparturePress = () => {
+    if (!bookedSpot) return;
+    setFinalOccupiedTime(parkingTime);
+    
+    const hourlyRate = (bookedSpot.prices as Record<string, number>)[selectedVehicle] ?? 0;
+    const computedFee = (parkingTime / 3600) * hourlyRate;
+    const amount = Math.max(5.00, Number(computedFee.toFixed(2)));
+    setFinalAmount(amount);
+    
+    setDeparturePhase('requesting');
+    setActiveModal('departure');
+  };
+
+  const handleDepartureComplete = () => {
+    setActiveModal(null);
+    setBookedSpotId(null);
+    setBookedSpot(null);
+    setHasArrived(false);
+    setTimeToArrive(1500);
+    setParkingTime(0);
+    hasDrawnRoute.current = false;
+    clearRouteOnMap();
+    if (coords) {
+      const filtered = buildMarkersPayload(selectedVehicle, coords, null);
+      sendMarkersToMap(filtered);
+    }
+  };
+
   // Post location coordinates to Leaflet map inside iframe or Webview
-  const sendLocationToMap = (lat: number, lng: number, zoom = 16) => {
-    const message = JSON.stringify({ type: 'setCenter', lat, lng, zoom });
+  const sendLocationToMap = (lat: number, lng: number, zoom = 16, shouldCenter = true) => {
+    const message = JSON.stringify({ type: 'setCenter', lat, lng, zoom, shouldCenter });
+    if (Platform.OS === 'web') {
+      if (iframeRef.current && iframeRef.current.contentWindow) {
+        iframeRef.current.contentWindow.postMessage(message, '*');
+      }
+    } else {
+      if (webviewRef.current) {
+        webviewRef.current.postMessage(message);
+      }
+    }
+  };
+
+  const drawRouteOnMap = (userLat: number, userLng: number, spotLat: number, spotLng: number, fitBounds = false) => {
+    const message = JSON.stringify({ type: 'drawRoute', userLat, userLng, spotLat, spotLng, fitBounds });
+    if (Platform.OS === 'web') {
+      if (iframeRef.current && iframeRef.current.contentWindow) {
+        iframeRef.current.contentWindow.postMessage(message, '*');
+      }
+    } else {
+      if (webviewRef.current) {
+        webviewRef.current.postMessage(message);
+      }
+    }
+  };
+
+  const clearRouteOnMap = () => {
+    const message = JSON.stringify({ type: 'clearRoute' });
     if (Platform.OS === 'web') {
       if (iframeRef.current && iframeRef.current.contentWindow) {
         iframeRef.current.contentWindow.postMessage(message, '*');
@@ -718,6 +1161,30 @@ export default function MapScreen() {
   const sendMarkersToMap = (markers: any[]) => {
     const message = JSON.stringify({ type: 'setMarkers', markers });
     if (Platform.OS === 'web') {
+      // Precompute detail pages as Blob URLs stored on parent window (reliable new-tab open)
+      const prevUrls: Record<string, string> = (window as any).__kantoDetailUrls || {};
+      Object.values(prevUrls).forEach((u: any) => { try { URL.revokeObjectURL(u); } catch(_) {} });
+      const urls: Record<string, string> = {};
+      markers.forEach((spot: any) => {
+        const html = buildParkingDetailPage(spot, spot.id === bookedSpotId);
+        const blob = new Blob([html], { type: 'text/html' });
+        urls[spot.id] = URL.createObjectURL(blob);
+      });
+      (window as any).__kantoDetailUrls = urls;
+      if (iframeRef.current && iframeRef.current.contentWindow) {
+        iframeRef.current.contentWindow.postMessage(message, '*');
+      }
+    } else {
+      if (webviewRef.current) {
+        webviewRef.current.postMessage(message);
+      }
+    }
+  };
+
+  // Send message to map to center on specific spot and open its details popup
+  const focusSpotOnMap = (spaceId: string) => {
+    const message = JSON.stringify({ type: 'focusSpot', spotId: spaceId, zoom: 17 });
+    if (Platform.OS === 'web') {
       if (iframeRef.current && iframeRef.current.contentWindow) {
         iframeRef.current.contentWindow.postMessage(message, '*');
       }
@@ -729,43 +1196,92 @@ export default function MapScreen() {
   };
 
   // Whenever coords change or the map mounts, we push the coordinates and current markers
+  const buildMarkersPayload = (
+    vehicleId: string,
+    userCoords: { latitude: number; longitude: number },
+    overrideBookedSpotId?: string | null
+  ) => {
+    const vehicleObj = VEHICLES.find((v) => v.id === vehicleId);
+    const vehicleLabel = vehicleObj ? vehicleObj.name : 'Vehicle';
+    
+    const activeSpotId = overrideBookedSpotId !== undefined ? overrideBookedSpotId : bookedSpotId;
+
+    // Only display the booked space if booked, otherwise filter by vehicle suitability
+    const targetSpaces = activeSpotId
+      ? BASE_PARKING_SPACES.filter(spot => spot.id === activeSpotId)
+      : BASE_PARKING_SPACES.filter((spot) => spot.vehicles.includes(vehicleId));
+
+    return targetSpaces
+      .map((spot) => ({
+        id: spot.id,
+        name: spot.name,
+        latitude: userCoords.latitude + spot.offsetLat,
+        longitude: userCoords.longitude + spot.offsetLng,
+        price: `₱${(spot.prices as Record<string, number>)[vehicleId] ?? 0}/hr`,
+        priceNum: (spot.prices as Record<string, number>)[vehicleId] ?? 0,
+        vehicleLabel,
+        slots: spot.slots,
+        amenities: spot.amenities,
+        allVehicles: spot.vehicles.map((vid) => {
+          const v = VEHICLES.find((vv) => vv.id === vid);
+          return v ? `${v.emoji} ${v.name}` : vid;
+        }),
+        image: spot.image,
+        location: 'Metro Manila, Philippines',
+        rating: 4.5,
+        reviewCount: 3,
+      }));
+  };
+
   const syncMapLocation = () => {
     if (coords) {
       setTimeout(() => {
-        sendLocationToMap(coords.latitude, coords.longitude);
-        const filtered = BASE_PARKING_SPACES
-          .filter((spot) => spot.vehicles.includes(selectedVehicle))
-          .map((spot) => ({
-            id: spot.id,
-            name: spot.name,
-            latitude: coords.latitude + spot.offsetLat,
-            longitude: coords.longitude + spot.offsetLng,
-            price: `₱${(spot.prices as Record<string, number>)[selectedVehicle] ?? 0}/hr`,
-            vehicles: spot.vehicles,
-          }));
+        sendLocationToMap(coords.latitude, coords.longitude, 16, !hasCenteredInitial.current);
+        if (!hasCenteredInitial.current) {
+          hasCenteredInitial.current = true;
+        }
+        const filtered = buildMarkersPayload(selectedVehicle, coords);
         sendMarkersToMap(filtered);
+
+        // Draw route if booked
+        if (bookedSpotId) {
+          const spot = BASE_PARKING_SPACES.find(s => s.id === bookedSpotId);
+          if (spot) {
+            const spotLat = coords.latitude + spot.offsetLat;
+            const spotLng = coords.longitude + spot.offsetLng;
+            drawRouteOnMap(coords.latitude, coords.longitude, spotLat, spotLng, !hasDrawnRoute.current);
+            hasDrawnRoute.current = true;
+          }
+        }
       }, 500);
     }
   };
 
   useEffect(() => {
-    syncMapLocation();
-  }, [coords]);
+    if (coords) {
+      sendLocationToMap(coords.latitude, coords.longitude, 16, !hasCenteredInitial.current);
+      if (!hasCenteredInitial.current) {
+        hasCenteredInitial.current = true;
+      }
+      const filtered = buildMarkersPayload(selectedVehicle, coords);
+      sendMarkersToMap(filtered);
+
+      if (bookedSpotId) {
+        const spot = BASE_PARKING_SPACES.find(s => s.id === bookedSpotId);
+        if (spot) {
+          const spotLat = coords.latitude + spot.offsetLat;
+          const spotLng = coords.longitude + spot.offsetLng;
+          drawRouteOnMap(coords.latitude, coords.longitude, spotLat, spotLng, !hasDrawnRoute.current);
+          hasDrawnRoute.current = true;
+        }
+      }
+    }
+  }, [coords, bookedSpotId]);
 
   // Dynamically update map markers when vehicle type selection changes
   useEffect(() => {
     if (coords) {
-      const filtered = BASE_PARKING_SPACES
-        .filter((spot) => spot.vehicles.includes(selectedVehicle))
-        .map((spot) => ({
-          id: spot.id,
-          name: spot.name,
-          latitude: coords.latitude + spot.offsetLat,
-          longitude: coords.longitude + spot.offsetLng,
-          price: `₱${(spot.prices as Record<string, number>)[selectedVehicle] ?? 0}/hr`,
-          vehicles: spot.vehicles,
-        }));
-      
+      const filtered = buildMarkersPayload(selectedVehicle, coords);
       const timer = setTimeout(() => {
         sendMarkersToMap(filtered);
       }, 300);
@@ -773,8 +1289,102 @@ export default function MapScreen() {
     }
   }, [selectedVehicle]);
 
+  // Listen for viewMore messages from the iframe on web
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const handleMessage = (event: MessageEvent) => {
+      try {
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        if (data && data.type === 'viewMore' && data.spot) {
+          const detailHtml = buildParkingDetailPage(data.spot);
+          const newTab = window.open('', '_blank');
+          if (newTab) {
+            newTab.document.write(detailHtml);
+            newTab.document.close();
+          }
+        } else if (data && data.type === 'viewDirections') {
+          if (data.spotId) {
+            const spot = BASE_PARKING_SPACES.find(s => s.id === data.spotId);
+            if (spot) {
+              setBookedSpot(spot);
+              setBookedSpotId(data.spotId);
+              setHasArrived(false);
+              setTimeToArrive(1500);
+              setParkingTime(0);
+              hasDrawnRoute.current = false;
+              
+              setTimeout(() => {
+                focusSpotOnMap(data.spotId);
+                if (coords) {
+                  const spotLat = coords.latitude + spot.offsetLat;
+                  const spotLng = coords.longitude + spot.offsetLng;
+                  drawRouteOnMap(coords.latitude, coords.longitude, spotLat, spotLng, true);
+                  hasDrawnRoute.current = true;
+                }
+              }, 500);
+            }
+          }
+        } else if (data && data.type === 'cancelBooking') {
+          handleCancelBooking(false);
+        }
+      } catch (e) {
+        // Silent catch
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  // Handle messages from native WebView
+  const handleNativeMessage = (event: any) => {
+    try {
+      const data = typeof event.nativeEvent.data === 'string'
+        ? JSON.parse(event.nativeEvent.data)
+        : event.nativeEvent.data;
+      if (data && data.type === 'viewMore' && data.spot) {
+        setViewMoreHtml(buildParkingDetailPage(data.spot));
+      } else if (data && data.type === 'viewDirections') {
+        setViewMoreHtml(null); // Close the detail Modal
+        if (data.spotId) {
+          const spot = BASE_PARKING_SPACES.find(s => s.id === data.spotId);
+          if (spot) {
+            setBookedSpot(spot);
+            setBookedSpotId(data.spotId);
+            setHasArrived(false);
+            setTimeToArrive(1500);
+            setParkingTime(0);
+            hasDrawnRoute.current = false;
+            
+            setTimeout(() => {
+              focusSpotOnMap(data.spotId);
+              if (coords) {
+                const spotLat = coords.latitude + spot.offsetLat;
+                const spotLng = coords.longitude + spot.offsetLng;
+                drawRouteOnMap(coords.latitude, coords.longitude, spotLat, spotLng, true);
+                hasDrawnRoute.current = true;
+              }
+            }, 500);
+          }
+        }
+      } else if (data && data.type === 'cancelBooking') {
+        setViewMoreHtml(null); // Close modal if open
+        handleCancelBooking(false);
+      }
+    } catch (e) {
+      // Silent catch
+    }
+  };
+
   const handleRecenter = () => {
     requestLocation();
+    if (coords && bookedSpotId) {
+      const spot = BASE_PARKING_SPACES.find(s => s.id === bookedSpotId);
+      if (spot) {
+        const spotLat = coords.latitude + spot.offsetLat;
+        const spotLng = coords.longitude + spot.offsetLng;
+        drawRouteOnMap(coords.latitude, coords.longitude, spotLat, spotLng, true);
+      }
+    }
   };
 
   const handleSpacePress = (spaceName: string) => {
@@ -801,6 +1411,7 @@ export default function MapScreen() {
               javaScriptEnabled={true}
               domStorageEnabled={true}
               originWhitelist={['*']}
+              onMessage={handleNativeMessage}
             />
           )
         )}
@@ -844,50 +1455,143 @@ export default function MapScreen() {
             <View style={styles.dragHandleContainer}>
               <View style={styles.dragHandle} />
             </View>
-            <View style={styles.sheetHeader}>
-              <View style={styles.headerRow}>
-                <Text style={styles.headerTitle}>Hi! Anong gusto mong i-park?</Text>
-                <TouchableOpacity onPress={() => toggleSheet(false)} style={styles.closeButton}>
-                  <Text style={styles.closeButtonText}>✕</Text>
-                </TouchableOpacity>
+            {bookedSpotId && bookedSpot ? (
+              <View style={styles.sheetHeader}>
+                <View style={styles.headerRow}>
+                  <Text style={styles.headerTitle}>{bookedSpot.name}</Text>
+                  <TouchableOpacity onPress={() => toggleSheet(false)} style={styles.closeButton}>
+                    <Text style={styles.closeButtonText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.headerSubtitle}>Active Booking Details & Navigation</Text>
               </View>
-              <Text style={styles.headerSubtitle}>Select vehicle type to filter parking spaces.</Text>
-            </View>
+            ) : (
+              <View style={styles.sheetHeader}>
+                <View style={styles.headerRow}>
+                  <Text style={styles.headerTitle}>Hi! Anong gusto mong i-park?</Text>
+                  <TouchableOpacity onPress={() => toggleSheet(false)} style={styles.closeButton}>
+                    <Text style={styles.closeButtonText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.headerSubtitle}>Select vehicle type to filter parking spaces.</Text>
+              </View>
+            )}
           </View>
 
           <ScrollView style={styles.sheetContent} showsVerticalScrollIndicator={true}>
-            {/* Horizontal Scrollable Vehicle List */}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.vehicleScrollContainer}
-            >
-              {VEHICLES.map((vehicle) => {
-                const isSelected = selectedVehicle === vehicle.id;
-                return (
-                  <TouchableOpacity
-                    key={vehicle.id}
-                    style={[styles.vehicleCard, isSelected && styles.selectedVehicleCard]}
-                    onPress={() => setSelectedVehicle(vehicle.id)}
-                    activeOpacity={0.85}
-                  >
-                    <View style={styles.imageWrapper}>
-                      <Text style={styles.vehicleEmoji}>{vehicle.emoji}</Text>
-                      <Image source={vehicle.image} style={styles.vehicleImage} />
-                    </View>
-                    <Text style={[styles.vehicleName, isSelected && styles.selectedText]}>
-                      {vehicle.name}
+            {bookedSpotId && bookedSpot ? (
+              <View style={styles.bookedContainer}>
+                {/* Space Info Card */}
+                <View style={styles.bookedInfoCard}>
+                  <Image
+                    source={{ uri: bookedSpot.image }}
+                    style={styles.bookedSpaceImage}
+                    contentFit="cover"
+                  />
+                  <View style={styles.bookedSpaceTextInfo}>
+                    <Text style={styles.bookedSpaceName}>{bookedSpot.name}</Text>
+                    <Text style={styles.bookedSpaceDescription} numberOfLines={2}>
+                      {bookedSpot.description}
                     </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+                    <View style={styles.bookedRateRow}>
+                      <Text style={styles.bookedRateLabel}>Rate: </Text>
+                      <Text style={styles.bookedRateValue}>
+                        ₱{(bookedSpot.prices as Record<string, number>)[selectedVehicle] ?? 0}/hr
+                      </Text>
+                    </View>
+                  </View>
+                </View>
 
-            <View style={styles.divider} />
+                {/* Timers Row */}
+                <View style={styles.timerRow}>
+                  {/* Countdown Timer */}
+                  <View style={[styles.timerCard, hasArrived && styles.timerCardInactive]}>
+                    <Text style={styles.timerCardTitle}>Time to Arrive</Text>
+                    <Text style={[styles.timerCardValue, hasArrived && styles.timerValueDisabled]}>
+                      {hasArrived ? 'Arrived 🅿️' : formatTimeToArrive(timeToArrive)}
+                    </Text>
+                    <Text style={styles.timerCardSubtitle}>
+                      {hasArrived ? 'Arrived at space' : 'Arrive within 25 mins'}
+                    </Text>
+                  </View>
 
-            {/* Available Parking Spaces Section */}
+                  {/* Parking Stopwatch */}
+                  <View style={[styles.timerCard, !hasArrived && styles.timerCardInactive]}>
+                    <Text style={styles.timerCardTitle}>Parking Time</Text>
+                    <Text style={[styles.timerCardValue, !hasArrived && styles.timerValueDisabled]}>
+                      {hasArrived ? formatParkingTime(parkingTime) : '--:--:--'}
+                    </Text>
+                    <Text style={styles.timerCardSubtitle}>
+                      {hasArrived ? 'Active session' : 'Starts upon arrival'}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Action Buttons */}
+                <View style={styles.actionButtonsContainer}>
+                  {!hasArrived ? (
+                    <>
+                      <TouchableOpacity
+                        style={styles.simulateButton}
+                        onPress={simulateArrival}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={styles.simulateButtonText}>📍 Simulate GPS Arrival</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.cancelBookingButton}
+                        onPress={handleCancelBookingPress}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={styles.cancelBookingButtonText}>✕ Cancel Booking</Text>
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.departureButton}
+                      onPress={handleRequestDeparturePress}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.departureButtonText}>🚗 Request for Departure</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            ) : (
+              <>
+                {/* Horizontal Scrollable Vehicle List */}
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.vehicleScrollContainer}
+                >
+                  {VEHICLES.map((vehicle) => {
+                    const isSelected = selectedVehicle === vehicle.id;
+                    return (
+                      <TouchableOpacity
+                        key={vehicle.id}
+                        style={[styles.vehicleCard, isSelected && styles.selectedVehicleCard]}
+                        onPress={() => setSelectedVehicle(vehicle.id)}
+                        activeOpacity={0.85}
+                      >
+                        <View style={styles.imageWrapper}>
+                          <Text style={styles.vehicleEmoji}>{vehicle.emoji}</Text>
+                          <Image source={vehicle.image} style={styles.vehicleImage} />
+                        </View>
+                        <Text style={[styles.vehicleName, isSelected && styles.selectedText]}>
+                          {vehicle.name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+
+                <View style={styles.divider} />
+
+            {/* Recently Parked Spaces Section */}
             <View style={styles.pastSpacesSection}>
-              <Text style={styles.sectionTitle}>Available Parking Spaces</Text>
+              <Text style={styles.sectionTitle}>Recently Parked Spaces</Text>
               {BASE_PARKING_SPACES.filter((spot) => spot.vehicles.includes(selectedVehicle)).length === 0 ? (
                 <Text style={styles.noSpacesText}>No available parking spaces for this vehicle type.</Text>
               ) : (
@@ -901,7 +1605,10 @@ export default function MapScreen() {
                       <View key={space.id} style={styles.spaceCard}>
                         <TouchableOpacity
                           style={styles.spaceHeaderPressable}
-                          onPress={() => toggleSpaceExpand(space.id)}
+                          onPress={() => {
+                            toggleSpaceExpand(space.id);
+                            focusSpotOnMap(space.id);
+                          }}
                           activeOpacity={0.7}
                         >
                           <View style={styles.spaceIconContainer}>
@@ -955,9 +1662,265 @@ export default function MapScreen() {
                   })
               )}
             </View>
+            </>
+            )}
           </ScrollView>
         </Animated.View>
       </View>
+      {/* Full-screen parking detail modal (native) */}
+      {Platform.OS !== 'web' && viewMoreHtml !== null && WebView && (
+        <Modal
+          visible={true}
+          animationType="slide"
+          onRequestClose={() => setViewMoreHtml(null)}
+          statusBarTranslucent
+        >
+          <View style={{ flex: 1, backgroundColor: '#263f4f' }}>
+            <View style={{
+              flexDirection: 'row', alignItems: 'center',
+              paddingTop: 52, paddingBottom: 12,
+              paddingHorizontal: 16,
+              backgroundColor: '#263f4f',
+            }}>
+              <TouchableOpacity
+                onPress={() => setViewMoreHtml(null)}
+                style={{
+                  backgroundColor: 'rgba(242,146,33,0.15)',
+                  borderWidth: 1.5, borderColor: 'rgba(242,146,33,0.4)',
+                  borderRadius: 10, paddingHorizontal: 14, paddingVertical: 7,
+                  marginRight: 12,
+                }}
+                activeOpacity={0.75}
+              >
+                <Text style={{ color: '#f29221', fontWeight: '800', fontSize: 13 }}>← Back</Text>
+              </TouchableOpacity>
+              <Text style={{ color: '#fff', fontWeight: '900', fontSize: 16, flex: 1 }} numberOfLines={1}>
+                Parking Details
+              </Text>
+            </View>
+            <WebView
+              source={{ html: viewMoreHtml }}
+              style={{ flex: 1, backgroundColor: '#f1f5f9' }}
+              javaScriptEnabled={true}
+              domStorageEnabled={true}
+              originWhitelist={['*']}
+              onMessage={handleNativeMessage}
+            />
+          </View>
+        </Modal>
+      )}
+
+      {/* Custom Modal overlay system */}
+      {activeModal !== null && (
+        <View style={styles.modalOverlay}>
+          <TouchableWithoutFeedback onPress={() => {
+            if (activeModal === 'confirm_book' || activeModal === 'cancel_confirm') {
+              setActiveModal(null);
+            }
+          }}>
+            <View style={styles.modalOverlayBackground} />
+          </TouchableWithoutFeedback>
+
+          <View style={styles.modalCard}>
+            {activeModal === 'confirm_book' && modalTargetSpace && (
+              <View>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Confirm Reservation</Text>
+                  <TouchableOpacity onPress={() => setActiveModal(null)} style={styles.modalCloseBtn}>
+                    <Text style={styles.modalCloseText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.modalDesc}>
+                  Reserve a slot at <Text style={styles.boldText}>{modalTargetSpace.name}</Text> for your <Text style={styles.boldText}>{VEHICLES.find(v => v.id === selectedVehicle)?.name || 'vehicle'}</Text>.
+                </Text>
+                
+                <View style={styles.bookingSummaryBox}>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Hourly Rate:</Text>
+                    <Text style={styles.summaryVal}>₱{modalTargetPrice}/hr</Text>
+                  </View>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Reservation Fee (30 mins):</Text>
+                    <Text style={styles.summaryVal}>₱{(modalTargetPrice / 2).toFixed(2)}</Text>
+                  </View>
+                  <View style={[styles.summaryRow, styles.summaryDivider]}>
+                    <Text style={styles.summaryLabel}>Policy:</Text>
+                    <Text style={[styles.summaryVal, { color: BrandColors.orange, fontWeight: '800' }]}>Non-refundable</Text>
+                  </View>
+                </View>
+
+                <View style={styles.modalActions}>
+                  <TouchableOpacity style={[styles.modalSecondaryBtn, { flex: 1 }]} onPress={() => setActiveModal(null)}>
+                    <Text style={styles.modalSecondaryText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.modalPrimaryBtn, { flex: 1 }]} onPress={confirmBooking}>
+                    <Text style={styles.modalPrimaryText}>Confirm & Pay</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {activeModal === 'booking_confirmed' && (
+              <View style={styles.centeredContent}>
+                <View style={styles.modalIconContainer}>
+                  <Text style={styles.modalSuccessIcon}>🎉</Text>
+                </View>
+                <Text style={styles.modalTitle}>Booking Confirmed!</Text>
+                <Text style={[styles.modalDesc, { textAlign: 'center' }]}>
+                  Successfully reserved a slot at <Text style={styles.boldText}>{bookedSpot?.name}</Text>. Please arrive within 25 minutes.
+                </Text>
+                
+                <TouchableOpacity style={[styles.modalPrimaryBtn, { width: '100%', marginTop: Spacing.three }]} onPress={() => setActiveModal(null)}>
+                  <Text style={styles.modalPrimaryText}>View Directions</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {activeModal === 'cancel_confirm' && (
+              <View>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Cancel Reservation?</Text>
+                  <TouchableOpacity onPress={() => setActiveModal(null)} style={styles.modalCloseBtn}>
+                    <Text style={styles.modalCloseText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.modalDesc}>
+                  Are you sure you want to cancel your slot reservation at <Text style={styles.boldText}>{bookedSpot?.name}</Text>?
+                </Text>
+
+                <View style={[styles.bookingSummaryBox, { borderColor: '#fca5a5', backgroundColor: '#fef2f2' }]}>
+                  <Text style={{ color: '#dc2626', fontWeight: '800', fontSize: 13, textAlign: 'center' }}>
+                    ⚠️ Notice: Reservation fee (₱{bookedSpot ? ((bookedSpot.prices as Record<string, number>)[selectedVehicle] / 2).toFixed(2) : 0}) is non-refundable upon cancellation.
+                  </Text>
+                </View>
+
+                <View style={styles.modalActions}>
+                  <TouchableOpacity style={[styles.modalSecondaryBtn, { flex: 1 }]} onPress={() => setActiveModal(null)}>
+                    <Text style={styles.modalSecondaryText}>Keep Booking</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.modalPrimaryBtn, { backgroundColor: '#dc2626', flex: 1 }]} onPress={() => handleCancelBooking(true)}>
+                    <Text style={styles.modalPrimaryText}>Yes, Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {activeModal === 'cancel_success' && (
+              <View style={styles.centeredContent}>
+                <View style={[styles.modalIconContainer, { backgroundColor: '#fee2e2' }]}>
+                  <Text style={[styles.modalSuccessIcon, { color: '#dc2626' }]}>✕</Text>
+                </View>
+                <Text style={styles.modalTitle}>Reservation Cancelled</Text>
+                <Text style={[styles.modalDesc, { textAlign: 'center' }]}>
+                  Your reservation was successfully cancelled. Note: The reservation fee is non-refundable.
+                </Text>
+                
+                <TouchableOpacity style={[styles.modalPrimaryBtn, { width: '100%', marginTop: Spacing.three }]} onPress={() => setActiveModal(null)}>
+                  <Text style={styles.modalPrimaryText}>Got it</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {activeModal === 'arrived' && (
+              <View style={styles.centeredContent}>
+                <View style={[styles.modalIconContainer, { backgroundColor: 'rgba(10, 124, 110, 0.1)' }]}>
+                  <Text style={styles.modalSuccessIcon}>🏁</Text>
+                </View>
+                <Text style={styles.modalTitle}>Arrived at Destination</Text>
+                <Text style={[styles.modalDesc, { textAlign: 'center' }]}>
+                  You have successfully arrived at your booked parking space at <Text style={styles.boldText}>{bookedSpot?.name}</Text>. Your parking duration stopwatch has started.
+                </Text>
+                
+                <TouchableOpacity style={[styles.modalPrimaryBtn, { width: '100%', marginTop: Spacing.three }]} onPress={() => setActiveModal(null)}>
+                  <Text style={styles.modalPrimaryText}>OK, Let's Park</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {activeModal === 'expired' && (
+              <View style={styles.centeredContent}>
+                <View style={[styles.modalIconContainer, { backgroundColor: '#fef3c7' }]}>
+                  <Text style={styles.modalSuccessIcon}>⏰</Text>
+                </View>
+                <Text style={styles.modalTitle}>Booking Expired</Text>
+                <Text style={[styles.modalDesc, { textAlign: 'center' }]}>
+                  You did not arrive at <Text style={styles.boldText}>{bookedSpot?.name || 'the parking space'}</Text> in time. Your reservation has been cancelled. Note: Reservation fee is non-refundable.
+                </Text>
+                
+                <TouchableOpacity style={[styles.modalPrimaryBtn, { width: '100%', marginTop: Spacing.three }]} onPress={() => setActiveModal(null)}>
+                  <Text style={styles.modalPrimaryText}>Got it</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {activeModal === 'departure' && (
+              <View style={styles.centeredContent}>
+                {departurePhase === 'requesting' ? (
+                  <View style={{ width: '100%', alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color={BrandColors.teal} style={{ marginBottom: Spacing.three }} />
+                    <Text style={styles.modalTitle}>Requesting Departure</Text>
+                    <Text style={[styles.modalDesc, { textAlign: 'center', marginBottom: Spacing.three }]}>
+                      Waiting for Owner confirmation...
+                    </Text>
+
+                    <View style={[styles.bookingSummaryBox, { width: '100%' }]}>
+                      <View style={styles.summaryRow}>
+                        <Text style={styles.summaryLabel}>Time Occupied:</Text>
+                        <Text style={styles.summaryVal}>{formatParkingTime(finalOccupiedTime)}</Text>
+                      </View>
+                      <View style={styles.summaryRow}>
+                        <Text style={styles.summaryLabel}>Hourly Rate:</Text>
+                        <Text style={styles.summaryVal}>
+                          ₱{bookedSpot ? (bookedSpot.prices as Record<string, number>)[selectedVehicle] ?? 0 : 0}/hr
+                        </Text>
+                      </View>
+                      <View style={[styles.summaryRow, styles.summaryDivider]}>
+                        <Text style={styles.summaryLabel}>Total Parking Fee:</Text>
+                        <Text style={[styles.summaryVal, { color: BrandColors.teal, fontWeight: '900' }]}>
+                          ₱{finalAmount.toFixed(2)}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                ) : (
+                  <View style={{ width: '100%', alignItems: 'center' }}>
+                    <View style={[styles.modalIconContainer, { backgroundColor: 'rgba(10, 124, 110, 0.1)' }]}>
+                      <Text style={styles.modalSuccessIcon}>🚗</Text>
+                    </View>
+                    <Text style={styles.modalTitle}>Departure Approved!</Text>
+                    <Text style={[styles.modalDesc, { textAlign: 'center', marginBottom: Spacing.three }]}>
+                      Owner confirmed your departure and payment. Thank you for parking with us!
+                    </Text>
+
+                    <View style={[styles.bookingSummaryBox, { width: '100%' }]}>
+                      <View style={styles.summaryRow}>
+                        <Text style={styles.summaryLabel}>Time Occupied:</Text>
+                        <Text style={styles.summaryVal}>{formatParkingTime(finalOccupiedTime)}</Text>
+                      </View>
+                      <View style={styles.summaryRow}>
+                        <Text style={styles.summaryLabel}>Total Paid:</Text>
+                        <Text style={[styles.summaryVal, { color: BrandColors.teal, fontWeight: '900' }]}>
+                          ₱{finalAmount.toFixed(2)}
+                        </Text>
+                      </View>
+                      <View style={[styles.summaryRow, styles.summaryDivider]}>
+                        <Text style={styles.summaryLabel}>Status:</Text>
+                        <Text style={[styles.summaryVal, { color: BrandColors.teal, fontWeight: '900' }]}>
+                          Paid & Complete
+                        </Text>
+                      </View>
+                    </View>
+
+                    <TouchableOpacity style={[styles.modalPrimaryBtn, { width: '100%' }]} onPress={handleDepartureComplete}>
+                      <Text style={styles.modalPrimaryText}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -1340,5 +2303,302 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     paddingVertical: Spacing.four,
+  },
+  // Active Booking Bottom Sheet Styles
+  bookedContainer: {
+    paddingHorizontal: Spacing.four,
+    paddingBottom: Spacing.six,
+  },
+  bookedInfoCard: {
+    flexDirection: 'row',
+    backgroundColor: BrandColors.white,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: 'rgba(38, 63, 79, 0.08)',
+    padding: Spacing.three,
+    gap: Spacing.three,
+    marginBottom: Spacing.three,
+    shadowColor: BrandColors.navy,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  bookedSpaceImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    backgroundColor: '#cbd5e1',
+  },
+  bookedSpaceTextInfo: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  bookedSpaceName: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: BrandColors.navy,
+  },
+  bookedSpaceDescription: {
+    fontSize: 12,
+    color: '#64748b',
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  bookedRateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  bookedRateLabel: {
+    fontSize: 12,
+    color: '#64748b',
+    fontWeight: '700',
+  },
+  bookedRateValue: {
+    fontSize: 13,
+    color: BrandColors.orange,
+    fontWeight: '900',
+  },
+  timerRow: {
+    flexDirection: 'row',
+    gap: Spacing.three,
+    marginBottom: Spacing.four,
+  },
+  timerCard: {
+    flex: 1,
+    backgroundColor: BrandColors.white,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: BrandColors.teal,
+    padding: Spacing.three,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: BrandColors.navy,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  timerCardInactive: {
+    borderColor: 'rgba(38, 63, 79, 0.08)',
+    backgroundColor: '#f8fafc',
+  },
+  timerCardTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#64748b',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  timerCardValue: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: BrandColors.teal,
+  },
+  timerValueDisabled: {
+    color: '#94a3b8',
+  },
+  timerCardSubtitle: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#94a3b8',
+    marginTop: 2,
+  },
+  actionButtonsContainer: {
+    flexDirection: 'column',
+    gap: Spacing.two,
+    marginTop: Spacing.one,
+  },
+  simulateButton: {
+    backgroundColor: BrandColors.orange,
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: BrandColors.orange,
+    shadowColor: BrandColors.orange,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  simulateButtonText: {
+    color: BrandColors.white,
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  cancelBookingButton: {
+    backgroundColor: '#fff5f5',
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#fecaca',
+  },
+  cancelBookingButtonText: {
+    color: '#dc2626',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  departureButton: {
+    backgroundColor: BrandColors.teal,
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: BrandColors.teal,
+    shadowColor: BrandColors.teal,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  departureButtonText: {
+    color: BrandColors.white,
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  modalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(38, 63, 79, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+    padding: Spacing.four,
+  },
+  modalOverlayBackground: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: BrandColors.white,
+    borderRadius: 24,
+    padding: Spacing.four,
+    borderWidth: 2,
+    borderColor: 'rgba(38, 63, 79, 0.15)',
+    shadowColor: BrandColors.navy,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.three,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: BrandColors.navy,
+  },
+  modalCloseBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(38, 63, 79, 0.06)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCloseText: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: BrandColors.navy,
+  },
+  modalDesc: {
+    fontSize: 14,
+    color: '#475569',
+    lineHeight: 20,
+    marginBottom: Spacing.three,
+    fontWeight: '600',
+  },
+  boldText: {
+    fontWeight: '900',
+    color: BrandColors.navy,
+  },
+  bookingSummaryBox: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    padding: Spacing.three,
+    marginBottom: Spacing.four,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 4,
+  },
+  summaryLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#64748b',
+  },
+  summaryVal: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: BrandColors.navy,
+  },
+  summaryDivider: {
+    borderTopWidth: 1.5,
+    borderColor: '#cbd5e1',
+    borderStyle: 'dashed',
+    marginTop: 8,
+    paddingTop: 8,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: Spacing.three,
+    marginTop: Spacing.one,
+  },
+  modalSecondaryBtn: {
+    backgroundColor: BrandColors.white,
+    borderWidth: 1.5,
+    borderColor: 'rgba(38, 63, 79, 0.15)',
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalSecondaryText: {
+    color: '#475569',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  modalPrimaryBtn: {
+    backgroundColor: BrandColors.teal,
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalPrimaryText: {
+    color: BrandColors.white,
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  centeredContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(10, 124, 110, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.three,
+  },
+  modalSuccessIcon: {
+    fontSize: 32,
+    color: BrandColors.teal,
   },
 });
