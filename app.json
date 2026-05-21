@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "kanto",
+    "slug": "kanto",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/kanto-logo-square.png",
+    "scheme": "kanto",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "icon": "./assets/images/kanto-logo-square.png"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#fffdeb",
+        "foregroundImage": "./assets/images/kanto-logo-square.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/kanto-logo-square.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#fffdeb",
+          "android": {
+            "image": "./assets/images/kanto-logo-square.png",
+            "imageWidth": 120
+          }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
