@@ -1,5 +1,5 @@
 /** Builds a full premium parking space detail page HTML string */
-export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = false): string {
+export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = false, initiallyArrived: boolean = false, selectedVehicle: string = 'motorcycle'): string {
   const SAMPLE_REVIEWS = [
     { id: 1, author: 'Maria Santos',   initials: 'MS', color: '#0a7c6e', stars: 5, date: 'May 18, 2026', text: 'Sobrang convenient ng location! Laging may slot, safe, malinis, at helpful ang attendant. Highly recommended!', helpful: 12 },
     { id: 2, author: 'Juan dela Cruz', initials: 'JC', color: '#f29221', stars: 4, date: 'May 15, 2026', text: 'Good parking spot. Malapit sa mga tindahan at accessible. May CCTV kaya safe. Konting improvement lang sa signages.', helpful: 7 },
@@ -51,6 +51,33 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
   const amenityCardsHtml = (spot.amenities || []).map((a: string) => {
     const icon = AMENITY_ICONS[a] || '&#9989;';
     return `<div class="amenity-card"><span class="amenity-icon">${icon}</span><span class="amenity-label">${a}</span></div>`;
+  }).join('');
+
+  /* ── Vehicle rates ── */
+  const VEHICLE_META: Record<string, { name: string, emoji: string }> = {
+    motorcycle: { name: 'Motorcycle', emoji: '🏍️' },
+    car: { name: 'Car', emoji: '🚗' },
+    tricycle: { name: 'Tricycle', emoji: '🛺' },
+    bicycle: { name: 'Bicycle', emoji: '🚲' },
+    jeepney: { name: 'Jeepney', emoji: '🚌' },
+    truck: { name: 'Truck', emoji: '🚚' },
+  };
+
+  const selectedVehicleMeta = VEHICLE_META[selectedVehicle] || { name: selectedVehicle, emoji: '🚗' };
+
+  const supportedVehicles = spot.vehicles || Object.keys(spot.prices || {});
+  const pricesObj = spot.prices || {};
+
+  const vehicleRatesHtml = supportedVehicles.map((vehicleId: string) => {
+    const meta = VEHICLE_META[vehicleId] || { name: vehicleId, emoji: '🅿️' };
+    const price = pricesObj[vehicleId] ?? 0;
+    return `<div class="rate-item">
+      <div class="rate-vehicle">
+        <span class="rate-emoji">${meta.emoji}</span>
+        <span class="rate-name">${meta.name}</span>
+      </div>
+      <div class="rate-val">&#8369;${price}/hr</div>
+    </div>`;
   }).join('');
 
   /* ── Review cards ── */
@@ -135,6 +162,12 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
     /* Info */
     .space-title{font-size:22px;font-weight:900;color:#263f4f;margin-bottom:8px;line-height:1.25}
     .location-pill{display:inline-flex;align-items:center;gap:6px;background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;color:#64748b;margin-bottom:18px}
+    .space-desc-text{font-size:14px;color:#475569;font-weight:500;line-height:1.6;margin-bottom:14px}
+    .details-price-slots{display:flex;gap:16px;margin-bottom:18px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:16px;padding:12px 16px}
+    .details-price,.details-slots{flex:1;display:flex;flex-direction:column;gap:4px}
+    .details-price{border-right:1.5px solid #e2e8f0;padding-right:16px}
+    .details-label{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
+    .details-value{font-size:16px;font-weight:900;color:#263f4f}
     .divider{height:1px;background:#f1f5f9;margin:16px 0}
 
     /* Rating summary */
@@ -163,6 +196,15 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
     .amenity-card:hover{background:#fff;border-color:#0a7c6e;box-shadow:0 2px 10px rgba(10,124,110,.14);transform:translateY(-1px)}
     .amenity-icon{font-size:22px;flex-shrink:0}
     .amenity-label{font-size:12px;font-weight:700;color:#263f4f;line-height:1.3}
+
+    /* Vehicle Rates */
+    .rates-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:10px}
+    .rate-item{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;transition:all .15s}
+    .rate-item:hover{background:#fff;border-color:#0a7c6e;box-shadow:0 2px 10px rgba(10,124,110,.14);transform:translateY(-1px)}
+    .rate-vehicle{display:flex;align-items:center;gap:8px}
+    .rate-emoji{font-size:20px}
+    .rate-name{font-size:12px;font-weight:700;color:#263f4f}
+    .rate-val{font-size:14px;font-weight:900;color:#f29221}
 
     /* Filter tabs */
     .filter-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:18px;scrollbar-width:none}
@@ -473,6 +515,31 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
       transform: translateY(0);
       box-shadow: 0 4px 12px rgba(220,38,38,.25);
     }
+
+    /* Request for Departure button style */
+    .book-btn.departure {
+      background: linear-gradient(135deg,#0a7c6e 0%,#0f9f8c 100%);
+      box-shadow: 0 8px 24px rgba(10,124,110,.38);
+    }
+    .book-btn.departure:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 32px rgba(10,124,110,.48);
+    }
+    .book-btn.departure:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 12px rgba(10,124,110,.25);
+    }
+
+    /* Unavailable button style */
+    .book-btn.unavailable {
+      background: #94a3b8;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+    .book-btn.unavailable:hover, .book-btn.unavailable:active {
+      transform: none;
+      box-shadow: none;
+    }
   `;
 
   /* ── Inline JS ── */
@@ -509,6 +576,7 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
 
     // Booking Flow State & Functions
     var isBooked = ${initiallyBooked ? 'true' : 'false'};
+    var hasArrived = ${initiallyArrived ? 'true' : 'false'};
     var walletBalance = 150.00;
     var reservationFee = ${spot.priceNum / 2};
 
@@ -521,8 +589,30 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
 
     function handleBookClick() {
       if (isBooked) {
-        openModal('cancelModal');
+        if (hasArrived) {
+          // Trigger departure request
+          if (window.ReactNativeWebView) {
+            window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'requestDeparture', spotId: '${spot.id}' }));
+          } else {
+            if (window.opener) {
+              window.opener.postMessage(JSON.stringify({ type: 'requestDeparture', spotId: '${spot.id}' }), '*');
+              if (window.opener.parent) {
+                window.opener.parent.postMessage(JSON.stringify({ type: 'requestDeparture', spotId: '${spot.id}' }), '*');
+              }
+            }
+          }
+        } else {
+          openModal('cancelModal');
+        }
       } else {
+        if (${spot.slots === 0}) {
+          if (window.ReactNativeWebView) {
+            window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'noSlotsError', spotName: '${spot.name}' }));
+          } else {
+            openModal('noSlotsModal');
+          }
+          return;
+        }
         updateWalletDisplay();
         openModal('reserveModal');
       }
@@ -555,12 +645,13 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
     function finalizeBooking() {
       closeModal('successModal');
       isBooked = true;
+      hasArrived = false;
       
       // Change book button to Cancel Booking state
       var btn = document.getElementById('mainBookBtn');
       if (btn) {
         btn.innerHTML = '&#10006;&nbsp;&nbsp;Cancel Booking';
-        btn.classList.add('booked');
+        btn.className = 'book-btn booked';
       }
     }
 
@@ -587,12 +678,13 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
       // Refund balance - DO NOT REFUND
       // walletBalance += reservationFee;
       isBooked = false;
+      hasArrived = false;
       
       // Revert book button to original state
       var btn = document.getElementById('mainBookBtn');
       if (btn) {
         btn.innerHTML = '&#128336;&nbsp;&nbsp;Book a Slot Now';
-        btn.classList.remove('booked');
+        btn.className = 'book-btn';
       }
       
       // Premium Toast feedback
@@ -651,12 +743,32 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
       if (isBooked) {
         var btn = document.getElementById('mainBookBtn');
         if (btn) {
-          btn.innerHTML = '&#10006;&nbsp;&nbsp;Cancel Booking';
-          btn.classList.add('booked');
+          if (hasArrived) {
+            btn.innerHTML = '&#128663;&nbsp;&nbsp;Request for Departure';
+            btn.className = 'book-btn departure';
+          } else {
+            btn.innerHTML = '&#10006;&nbsp;&nbsp;Cancel Booking';
+            btn.className = 'book-btn booked';
+          }
         }
       }
     });
   `;
+
+  let bookBtnText = '&#128336;&nbsp;&nbsp;Book a Slot Now';
+  let bookBtnClass = 'book-btn';
+  if (initiallyBooked) {
+    if (initiallyArrived) {
+      bookBtnText = '&#128663;&nbsp;&nbsp;Request for Departure';
+      bookBtnClass = 'book-btn departure';
+    } else {
+      bookBtnText = '&#10006;&nbsp;&nbsp;Cancel Booking';
+      bookBtnClass = 'book-btn booked';
+    }
+  } else if (spot.slots === 0) {
+    bookBtnText = '&#10060;&nbsp;&nbsp;No Slots Available';
+    bookBtnClass = 'book-btn unavailable';
+  }
 
   /* ── Assemble ── */
   return `<!DOCTYPE html>
@@ -682,6 +794,17 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
     <div class="card">
       <h1 class="space-title">${spot.name}</h1>
       <div class="location-pill">&#128205;&nbsp;${location}</div>
+      <div class="details-price-slots">
+        <div class="details-price">
+          <span class="details-label">Selected Rate (${selectedVehicleMeta.emoji} ${selectedVehicleMeta.name})</span>
+          <span class="details-value">&#8369;${pricesObj[selectedVehicle] ?? 0}/hr</span>
+        </div>
+        <div class="details-slots">
+          <span class="details-label">Available Slots</span>
+          <span class="details-value" style="color: ${spot.slots > 0 ? '#0a7c6e' : '#dc2626'}">${spot.slots > 0 ? spot.slots + ' available' : 'No slots available'}</span>
+        </div>
+      </div>
+      <p class="space-desc-text">${spot.description || ''}</p>
       <div class="divider"></div>
       <div class="rating-summary">
         <div class="left-rating">
@@ -693,9 +816,15 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
       </div>
     </div>
 
+    <!-- Vehicle Rates -->
+    <div class="card">
+      <div class="section-title">&#128181;&nbsp; Vehicle Rates (Per Hour)</div>
+      <div class="rates-grid">${vehicleRatesHtml}</div>
+    </div>
+
     <!-- Book Now -->
-    <button class="book-btn" id="mainBookBtn" onclick="handleBookClick()">
-      &#128336;&nbsp;&nbsp;Book a Slot Now
+    <button class="${bookBtnClass}" id="mainBookBtn" onclick="handleBookClick()">
+      ${bookBtnText}
     </button>
 
     <!-- Amenities -->
@@ -722,9 +851,13 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
         <h3>Confirm Reservation</h3>
         <button class="modal-close" onclick="closeModal('reserveModal')">&times;</button>
       </div>
-      <p class="modal-desc">Reserve a slot at <strong>${spot.name}</strong>. Half-hour fee will be deducted from your wallet balance.</p>
+      <p class="modal-desc">Reserve a slot at <strong>${spot.name}</strong>. The reservation fee covers the first 30 minutes of parking free of charge.</p>
       
       <div class="booking-summary-box">
+        <div class="summary-row">
+          <span>Vehicle Type:</span>
+          <span class="val">${selectedVehicleMeta.emoji} ${selectedVehicleMeta.name}</span>
+        </div>
         <div class="summary-row">
           <span>My Wallet Balance:</span>
           <span class="val" id="reserveWalletBalance">&#8369;150.00</span>
@@ -739,7 +872,7 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
         </div>
         <div class="summary-row" style="margin-top: 4px; padding-top: 4px;">
           <span>Arrival Time Limit:</span>
-          <span class="val" style="color: #0a7c6e; font-weight: 900;">25 minutes</span>
+          <span class="val" style="color: #0a7c6e; font-weight: 900;">30 minutes</span>
         </div>
       </div>
       
@@ -765,6 +898,10 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
           <span class="val">${spot.name}</span>
         </div>
         <div class="summary-row">
+          <span>Vehicle Type:</span>
+          <span class="val">${selectedVehicleMeta.emoji} ${selectedVehicleMeta.name}</span>
+        </div>
+        <div class="summary-row">
           <span>Reservation Cost:</span>
           <span class="val">&#8369;${(spot.priceNum / 2).toFixed(2)}</span>
         </div>
@@ -774,7 +911,7 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
         </div>
         <div class="summary-row" style="margin-top: 4px; border-top: 1px dashed #cbd5e1; padding-top: 4px;">
           <span>Arrival Policy:</span>
-          <span class="val" style="color: #0a7c6e;">Please arrive within 25 mins</span>
+          <span class="val" style="color: #0a7c6e;">Please arrive within 30 mins</span>
         </div>
       </div>
       
@@ -795,6 +932,19 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
         <button class="cancel-btn-action keep" onclick="closeModal('cancelModal')">Keep Reservation</button>
         <button class="cancel-btn-action confirm" onclick="confirmCancelBooking()">Yes, Cancel Booking</button>
       </div>
+    </div>
+  </div>
+
+  <!-- No Slots Warning Modal -->
+  <div id="noSlotsModal" class="modal-overlay">
+    <div class="modal-card success-card">
+      <div class="warning-icon-wrap" style="background: rgba(242, 146, 33, 0.1); border-color: #f29221;">
+        <span class="warning-icon" style="color: #f29221;">&#9888;</span>
+      </div>
+      <h2>No Slots Available</h2>
+      <p class="success-msg">We are sorry, but <strong>${spot.name}</strong> is currently full. Please try booking another parking space.</p>
+      
+      <button class="modal-done-btn" onclick="closeModal('noSlotsModal')">OK</button>
     </div>
   </div>
 

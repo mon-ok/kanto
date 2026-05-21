@@ -14,6 +14,9 @@ import {
   TouchableWithoutFeedback,
   Alert,
   Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Switch,
 } from 'react-native';
 import { Image } from 'expo-image';
 import * as Location from 'expo-location';
@@ -148,6 +151,13 @@ const LEAFLET_HTML = `
       border-top: 8px solid white;
       z-index: -1;
     }
+    .price-marker.unavailable {
+      background-color: #94a3b8;
+      box-shadow: 0 4px 10px rgba(148, 163, 184, 0.4);
+    }
+    .price-marker.unavailable::after {
+      border-top-color: #94a3b8;
+    }
     
     /* Leaflet Popup Styling */
     .leaflet-popup-content-wrapper {
@@ -242,6 +252,11 @@ const LEAFLET_HTML = `
       font-size: 11px;
       font-weight: 800;
       color: #f29221;
+    }
+    .popup-slots-badge.unavailable {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.25);
+      color: #ef4444;
     }
     .popup-amenities {
       display: flex;
@@ -363,10 +378,14 @@ const LEAFLET_HTML = `
 
       // Add new markers
       markersData.forEach(function(spot) {
+        var markerClass = 'price-marker';
+        if (spot.slots === 0) {
+          markerClass += ' unavailable';
+        }
         // Create custom orange price pin icon
         var customIcon = L.divIcon({
           className: 'custom-parking-marker',
-          html: '<div class="price-marker">' + spot.price + '</div>',
+          html: '<div class="' + markerClass + '">' + spot.price + '</div>',
           iconSize: [60, 30],
           iconAnchor: [30, 30] // anchor at the bottom middle of the tag
         });
@@ -384,6 +403,14 @@ const LEAFLET_HTML = `
         var amenityBadges = (spot.amenities || []).map(function(a) {
           return '<span class="popup-amenity-badge">' + a + '</span>';
         }).join('');
+
+        var slotsBadgeClass = 'popup-slots-badge';
+        var slotsText = spot.slots + ' available';
+        if (spot.slots === 0) {
+          slotsBadgeClass += ' unavailable';
+          slotsText = 'No slots available';
+        }
+
         // Build rich popup content
         var popupContent =
           '<div class="popup-inner">' +
@@ -397,10 +424,10 @@ const LEAFLET_HTML = `
             '<div class="popup-vehicles">' + vehicleBadges + '</div>' +
             '<div class="popup-slots">' +
               '<span class="popup-section-label" style="margin-bottom:0">Slots:</span>' +
-              '<span class="popup-slots-badge">' + spot.slots + ' available</span>' +
+              '<span class="' + slotsBadgeClass + '">' + slotsText + '</span>' +
             '</div>' +
             '<div class="popup-divider"></div>' +
-            '<div class="popup-section-label">Description</div>' +
+            '<div class="popup-section-label">Amenities & Features</div>' +
             '<div class="popup-amenities">' + amenityBadges + '</div>' +
             '<button class="popup-view-more" data-spot-id="' + spot.id + '">' +
               'View More &#8594;' +
@@ -509,7 +536,7 @@ const VEHICLES = [
 const BASE_PARKING_SPACES = [
   {
     id: 'spot-1',
-    name: 'Kanto Central Parking',
+    name: "Mang Juan's Gated Bakuran",
     offsetLat: 0.0018,
     offsetLng: 0.0025,
     prices: {
@@ -520,15 +547,17 @@ const BASE_PARKING_SPACES = [
       jeepney: 50,
       truck: 80,
     },
-    slots: 8,
-    description: 'Convenient outdoor parking lot right next to the central market. Safe, well-lit, and ideal for quick transactions.',
-    amenities: ['CCTV Monitoring', 'Lighting', 'Cement Pavement'],
+    slots: 4,
+    rating: 4.8,
+    reviewCount: 12,
+    description: 'Malawak at sementadong bakuran sa likod ng bahay ni Mang Juan. Safe, may gate, at malapit sa palengke. Bantay-sarado ng pamilya.',
+    amenities: ['Gated Property', 'CCTV Monitoring', 'Lighting', 'Attendant (Mang Juan)', 'Cement Pavement'],
     image: 'https://images.unsplash.com/photo-1506521788723-8681148e22db?w=600&auto=format&fit=crop&q=60',
     vehicles: ['motorcycle', 'car', 'tricycle', 'bicycle', 'jeepney', 'truck'],
   },
   {
     id: 'spot-2',
-    name: 'Kanto Plaza Basement',
+    name: "Aling Nena's Gated Garaje",
     offsetLat: -0.0025,
     offsetLng: 0.0018,
     prices: {
@@ -539,15 +568,17 @@ const BASE_PARKING_SPACES = [
       jeepney: 60,
       truck: 100,
     },
-    slots: 15,
-    description: 'Premium underground parking with strict automated security and clean bays. Complete protection from rain and sun.',
-    amenities: ['Covered Roof', 'CCTV Monitoring', '24/7 Security', 'Elevator Access'],
+    slots: 0,
+    rating: 4.6,
+    reviewCount: 9,
+    description: 'Safe at saradong garahe sa tapat ng bahay ni Aling Nena. Protektado ang sasakyan mo sa init at ulan. Kasya ang SUV o Sedan.',
+    amenities: ['Covered Roof', 'Gated Property', 'CCTV Monitoring', 'Flood-free'],
     image: 'https://images.unsplash.com/photo-1573348722427-f1d6819fdf98?w=600&auto=format&fit=crop&q=60',
     vehicles: ['motorcycle', 'car', 'jeepney', 'truck'],
   },
   {
     id: 'spot-3',
-    name: 'Green Garden Deck',
+    name: "Tito Boy's Covered Carport",
     offsetLat: 0.0012,
     offsetLng: -0.0035,
     prices: {
@@ -558,15 +589,17 @@ const BASE_PARKING_SPACES = [
       jeepney: 40,
       truck: 70,
     },
-    slots: 5,
-    description: 'Eco-friendly multi-level parking deck with hanging gardens. Offers beautiful views and solar-powered EV charging.',
-    amenities: ['Covered Roof', 'CCTV Monitoring', 'EV Charging', 'Eco-friendly'],
+    slots: 2,
+    rating: 4.2,
+    reviewCount: 8,
+    description: 'Driveway na may bubong sa isang secure na subdivision. Bantay-sarado ng mga aso ni Tito Boy (very friendly) at may village guards.',
+    amenities: ['Covered Roof', 'Subdivision Security', 'Lighting', 'Pet Friendly'],
     image: 'https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=600&auto=format&fit=crop&q=60',
     vehicles: ['motorcycle', 'car', 'tricycle', 'bicycle', 'jeepney'],
   },
   {
     id: 'spot-4',
-    name: 'Legazpi Active Park Lot',
+    name: "Kuya Jojo's Front Yard Space",
     offsetLat: -0.0015,
     offsetLng: -0.0012,
     prices: {
@@ -577,15 +610,17 @@ const BASE_PARKING_SPACES = [
       jeepney: 55,
       truck: 90,
     },
-    slots: 12,
-    description: 'Located beside the park, perfect for weekend markets and morning jogs. Highly secure with regular security patrols.',
-    amenities: ['CCTV Monitoring', '24/7 Security', 'Free Carwash', 'Handicap Friendly'],
+    slots: 3,
+    rating: 4.5,
+    reviewCount: 15,
+    description: 'Pinasementuhang space sa tapat ng bahay at sari-sari store ni Kuya Jojo. Madaling parkingan at laging may tao sa tapat.',
+    amenities: ['CCTV Monitoring', 'Lighting', 'Near Sari-Sari Store', 'Cement Pavement'],
     image: 'https://images.unsplash.com/photo-1621905252507-b354bc25edac?w=600&auto=format&fit=crop&q=60',
     vehicles: ['car', 'motorcycle', 'jeepney', 'tricycle', 'bicycle'],
   },
   {
     id: 'spot-5',
-    name: 'Ayala Triangle Gardens Parking',
+    name: "Ate Sarah's Gated Driveway",
     offsetLat: 0.0032,
     offsetLng: -0.0022,
     prices: {
@@ -596,15 +631,17 @@ const BASE_PARKING_SPACES = [
       jeepney: 70,
       truck: 120,
     },
-    slots: 22,
-    description: 'Modern parking garage with state-of-the-art layout under the business park. Quick walk to major restaurants and corporate offices.',
-    amenities: ['Covered Roof', 'CCTV Monitoring', '24/7 Security', 'Fire Safety'],
+    slots: 2,
+    rating: 4.9,
+    reviewCount: 20,
+    description: 'Malilim at sementadong driveway ni Ate Sarah. 2 minutes walk lang mula sa parokya/simbahan. Perfect tuwing Linggo.',
+    amenities: ['Covered Roof', 'CCTV Monitoring', 'Gated Property', 'Near Church'],
     image: 'https://images.unsplash.com/photo-1545259742-b4fd8fea67e4?w=600&auto=format&fit=crop&q=60',
     vehicles: ['car', 'motorcycle', 'jeepney', 'truck'],
   },
   {
     id: 'spot-6',
-    name: 'Rada St. Kerbside Parking',
+    name: "Mang Tomas' Vacant Lot",
     offsetLat: 0.0028,
     offsetLng: 0.0042,
     prices: {
@@ -615,15 +652,17 @@ const BASE_PARKING_SPACES = [
       jeepney: 45,
       truck: 75,
     },
-    slots: 3,
-    description: 'Street-side parallel parking spots with dedicated parking attendants. Very convenient for quick coffee runs or dining.',
-    amenities: ['Lighting', 'Parking Attendant'],
+    slots: 0,
+    rating: 4.0,
+    reviewCount: 7,
+    description: 'Bakanteng lote sa tapat mismo ng Barangay Hall. Binabantayan ng mga barangay tanod kaya sigurado kang panatag ang loob mo.',
+    amenities: ['Barangay Tanod Patrol', 'Lighting', 'Spacious Area'],
     image: 'https://images.unsplash.com/photo-1508962914676-134849a727f0?w=600&auto=format&fit=crop&q=60',
     vehicles: ['motorcycle', 'car', 'tricycle', 'bicycle'],
   },
   {
     id: 'spot-7',
-    name: 'Kanto Express Hub',
+    name: "Lola Flor's Canopy Garage",
     offsetLat: -0.0032,
     offsetLng: -0.0035,
     prices: {
@@ -634,15 +673,17 @@ const BASE_PARKING_SPACES = [
       jeepney: 40,
       truck: 75,
     },
-    slots: 7,
-    description: 'Express drop-off and short-term parking hub. Fast turnover and easy access to the main avenue.',
-    amenities: ['CCTV Monitoring', 'Lighting', 'Express Lanes'],
+    slots: 2,
+    rating: 4.3,
+    reviewCount: 6,
+    description: 'Malilim na garahe ni Lola Flor na may canopy sa harap. Laging may tao sa bahay kaya ligtas ang motor o trike mo.',
+    amenities: ['Covered Roof', 'Attendant (Lola Flor)', 'Lighting'],
     image: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=600&auto=format&fit=crop&q=60',
     vehicles: ['motorcycle', 'tricycle', 'jeepney', 'bicycle', 'car'],
   },
   {
     id: 'spot-8',
-    name: 'Metro North Covered Terminal',
+    name: "Kuya Cardo's Heavy Vehicle Space",
     offsetLat: 0.0045,
     offsetLng: 0.0015,
     prices: {
@@ -653,15 +694,17 @@ const BASE_PARKING_SPACES = [
       jeepney: 45,
       truck: 85,
     },
-    slots: 18,
-    description: 'Large covered terminal parking with high clearance, specifically optimized for public utility and large cargo vehicles.',
-    amenities: ['Covered Roof', 'CCTV Monitoring', 'Free Carwash', 'Restrooms'],
+    slots: 4,
+    rating: 4.7,
+    reviewCount: 11,
+    description: 'Malawak na lupain ni Kuya Cardo na kasya ang jeepney, delivery truck, o cargo vehicle. May sliding gate at CCTV.',
+    amenities: ['Covered Roof', 'CCTV Monitoring', 'Truck Friendly', 'Gated Property'],
     image: 'https://images.unsplash.com/photo-1520038410233-7141be7e6f97?w=600&auto=format&fit=crop&q=60',
     vehicles: ['motorcycle', 'car', 'tricycle', 'jeepney', 'truck'],
   },
   {
     id: 'spot-9',
-    name: 'Baywalk Sunrise Parking',
+    name: "Ninong Bobby's Backyard Pave",
     offsetLat: -0.0042,
     offsetLng: 0.0028,
     prices: {
@@ -672,15 +715,17 @@ const BASE_PARKING_SPACES = [
       jeepney: 45,
       truck: 80,
     },
-    slots: 10,
-    description: 'Scenic outdoor parking along the baywalk. Features breezy seaside air, perfect for watching the famous sunset.',
-    amenities: ['Seaside View', 'Lighting', 'CCTV Monitoring'],
+    slots: 3,
+    rating: 4.4,
+    reviewCount: 5,
+    description: 'Sementadong gilid ng duplex house ni Ninong Bobby. Tahimik na eskinita, may gate, at babantayan din ng pamilya niya.',
+    amenities: ['Gated Property', 'Lighting', 'Cement Pavement', 'Quiet Area'],
     image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=600&auto=format&fit=crop&q=60',
     vehicles: ['motorcycle', 'car', 'tricycle', 'bicycle', 'jeepney', 'truck'],
   },
   {
     id: 'spot-10',
-    name: 'San Lorenzo Compound',
+    name: "Ate Grace's Covered Carport",
     offsetLat: -0.0018,
     offsetLng: 0.0035,
     prices: {
@@ -691,9 +736,11 @@ const BASE_PARKING_SPACES = [
       jeepney: 50,
       truck: 90,
     },
-    slots: 6,
-    description: 'Quiet gated residential compound parking. Extra secure with manual gates and 24/7 security guard checking.',
-    amenities: ['Covered Roof', '24/7 Security', 'Manual Gate'],
+    slots: 3,
+    rating: 4.5,
+    reviewCount: 10,
+    description: 'Covered carport sa tabi ng residential compound ni Ate Grace. May malaking bubong at safety steel sliding gate.',
+    amenities: ['Covered Roof', '24/7 Security', 'Steel sliding gate', 'Lighting'],
     image: 'https://images.unsplash.com/photo-1506521788723-8681148e22db?w=600&auto=format&fit=crop&q=60',
     vehicles: ['motorcycle', 'car', 'tricycle', 'bicycle', 'jeepney', 'truck'],
   },
@@ -799,6 +846,8 @@ function formatParkingTime(seconds: number) {
   return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
+const RECENT_SPACES_IDS = ['spot-1', 'spot-3'];
+
 export default function MapScreen() {
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -812,16 +861,44 @@ export default function MapScreen() {
   const [bookedSpotId, setBookedSpotId] = useState<string | null>(null);
   const [bookedSpot, setBookedSpot] = useState<any | null>(null);
   const [hasArrived, setHasArrived] = useState(false);
-  const [timeToArrive, setTimeToArrive] = useState(1500); // 25 mins
+  const [timeToArrive, setTimeToArrive] = useState(1800); // 30 mins
   const [parkingTime, setParkingTime] = useState(0);
 
   // Custom Modals State
-  const [activeModal, setActiveModal] = useState<'confirm_book' | 'booking_confirmed' | 'cancel_confirm' | 'cancel_success' | 'arrived' | 'expired' | 'departure' | null>(null);
+  const [activeModal, setActiveModal] = useState<
+    | 'confirm_book'
+    | 'booking_confirmed'
+    | 'cancel_confirm'
+    | 'cancel_success'
+    | 'arrived'
+    | 'expired'
+    | 'departure'
+    | 'rate_parking'
+    | 'review_success'
+    | 'no_slots'
+    | 'filter'
+    | null
+  >(null);
+
+  // Active Filter States
+  const [hideFullSpaces, setHideFullSpaces] = useState<boolean>(false);
+  const [maxPrice, setMaxPrice] = useState<number>(200); // 200 = Any Price
+  const [minStars, setMinStars] = useState<number>(0); // 0 = Any
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+
+  // Temp Buffered Filter States (for modal)
+  const [tempHideFullSpaces, setTempHideFullSpaces] = useState<boolean>(false);
+  const [tempMaxPrice, setTempMaxPrice] = useState<number>(200);
+  const [tempMinStars, setTempMinStars] = useState<number>(0);
+  const [tempSelectedAmenities, setTempSelectedAmenities] = useState<string[]>([]);
   const [modalTargetSpace, setModalTargetSpace] = useState<any | null>(null);
   const [modalTargetPrice, setModalTargetPrice] = useState<number>(0);
   const [departurePhase, setDeparturePhase] = useState<'requesting' | 'confirmed'>('requesting');
   const [finalOccupiedTime, setFinalOccupiedTime] = useState<number>(0);
   const [finalAmount, setFinalAmount] = useState<number>(0);
+  const [ratingStars, setRatingStars] = useState<number>(5);
+  const [ratingComment, setRatingComment] = useState<string>('');
+  const [noSlotsSpotName, setNoSlotsSpotName] = useState<string>('');
 
   const hasCenteredInitial = useRef(false);
   const hasDrawnRoute = useRef(false);
@@ -846,7 +923,7 @@ export default function MapScreen() {
     setBookedSpot(space);
     setBookedSpotId(space.id);
     setHasArrived(false);
-    setTimeToArrive(1500);
+    setTimeToArrive(1800);
     setParkingTime(0);
     hasDrawnRoute.current = false;
     
@@ -862,6 +939,20 @@ export default function MapScreen() {
     }, 500);
 
     setActiveModal('booking_confirmed');
+  };
+
+  const openParkingDetails = (spot: any) => {
+    const isBooked = spot.id === bookedSpotId;
+    const detailHtml = buildParkingDetailPage(spot, isBooked, hasArrived, selectedVehicle);
+    if (Platform.OS === 'web') {
+      const newTab = window.open('', '_blank');
+      if (newTab) {
+        newTab.document.write(detailHtml);
+        newTab.document.close();
+      }
+    } else {
+      setViewMoreHtml(detailHtml);
+    }
   };
 
   const webviewRef = useRef<any>(null);
@@ -953,22 +1044,27 @@ export default function MapScreen() {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         setErrorMsg('Location permission was denied. Defaulting to Manila.');
-        setCoords({ latitude: 14.5995, longitude: 120.9842 }); // Manila PH
+        const fallback = { latitude: 14.5995, longitude: 120.9842 };
+        setCoords(fallback);
         setLoading(false);
-        return;
+        return fallback;
       }
 
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
-      setCoords({
+      const current = {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
-      });
+      };
+      setCoords(current);
       setErrorMsg(null);
+      return current;
     } catch (e) {
       setErrorMsg('Error fetching location. Defaulting to Manila.');
-      setCoords({ latitude: 14.5995, longitude: 120.9842 }); // Manila PH
+      const fallback = { latitude: 14.5995, longitude: 120.9842 };
+      setCoords(fallback);
+      return fallback;
     } finally {
       setLoading(false);
     }
@@ -1046,12 +1142,14 @@ export default function MapScreen() {
           return prev - 1;
         });
       } else {
-        setParkingTime((prev) => prev + 1);
+        if (activeModal !== 'departure') {
+          setParkingTime((prev) => prev + 1);
+        }
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [bookedSpotId, hasArrived]);
+  }, [bookedSpotId, hasArrived, activeModal]);
 
   // 3-second departure request watcher
   useEffect(() => {
@@ -1067,7 +1165,7 @@ export default function MapScreen() {
     setBookedSpotId(null);
     setBookedSpot(null);
     setHasArrived(false);
-    setTimeToArrive(1500);
+    setTimeToArrive(1800);
     setParkingTime(0);
     hasDrawnRoute.current = false;
     clearRouteOnMap();
@@ -1094,8 +1192,10 @@ export default function MapScreen() {
     setFinalOccupiedTime(parkingTime);
     
     const hourlyRate = (bookedSpot.prices as Record<string, number>)[selectedVehicle] ?? 0;
-    const computedFee = (parkingTime / 3600) * hourlyRate;
-    const amount = Math.max(5.00, Number(computedFee.toFixed(2)));
+    // Reservation fee covers the first 30 minutes (1800 seconds) of parking free of charge
+    const billableTime = Math.max(0, parkingTime - 1800);
+    const computedFee = (billableTime / 3600) * hourlyRate;
+    const amount = Number(computedFee.toFixed(2));
     setFinalAmount(amount);
     
     setDeparturePhase('requesting');
@@ -1107,7 +1207,7 @@ export default function MapScreen() {
     setBookedSpotId(null);
     setBookedSpot(null);
     setHasArrived(false);
-    setTimeToArrive(1500);
+    setTimeToArrive(1800);
     setParkingTime(0);
     hasDrawnRoute.current = false;
     clearRouteOnMap();
@@ -1115,6 +1215,10 @@ export default function MapScreen() {
       const filtered = buildMarkersPayload(selectedVehicle, coords, null);
       sendMarkersToMap(filtered);
     }
+  };
+
+  const submitReview = () => {
+    setActiveModal('review_success');
   };
 
   // Post location coordinates to Leaflet map inside iframe or Webview
@@ -1166,7 +1270,7 @@ export default function MapScreen() {
       Object.values(prevUrls).forEach((u: any) => { try { URL.revokeObjectURL(u); } catch(_) {} });
       const urls: Record<string, string> = {};
       markers.forEach((spot: any) => {
-        const html = buildParkingDetailPage(spot, spot.id === bookedSpotId);
+        const html = buildParkingDetailPage(spot, spot.id === bookedSpotId, hasArrived, selectedVehicle);
         const blob = new Blob([html], { type: 'text/html' });
         urls[spot.id] = URL.createObjectURL(blob);
       });
@@ -1206,10 +1310,30 @@ export default function MapScreen() {
     
     const activeSpotId = overrideBookedSpotId !== undefined ? overrideBookedSpotId : bookedSpotId;
 
-    // Only display the booked space if booked, otherwise filter by vehicle suitability
-    const targetSpaces = activeSpotId
+    // Only display the booked space if booked, otherwise filter by vehicle suitability and active filters
+    let targetSpaces = activeSpotId
       ? BASE_PARKING_SPACES.filter(spot => spot.id === activeSpotId)
       : BASE_PARKING_SPACES.filter((spot) => spot.vehicles.includes(vehicleId));
+
+    if (!activeSpotId) {
+      if (hideFullSpaces) {
+        targetSpaces = targetSpaces.filter((spot) => spot.slots > 0);
+      }
+      if (maxPrice < 200) {
+        targetSpaces = targetSpaces.filter((spot) => {
+          const price = (spot.prices as Record<string, number>)[vehicleId] ?? 0;
+          return price <= maxPrice;
+        });
+      }
+      if (minStars > 0) {
+        targetSpaces = targetSpaces.filter((spot) => spot.rating >= minStars);
+      }
+      if (selectedAmenities.length > 0) {
+        targetSpaces = targetSpaces.filter((spot) =>
+          selectedAmenities.every((amenity) => spot.amenities.includes(amenity))
+        );
+      }
+    }
 
     return targetSpaces
       .map((spot) => ({
@@ -1226,10 +1350,13 @@ export default function MapScreen() {
           const v = VEHICLES.find((vv) => vv.id === vid);
           return v ? `${v.emoji} ${v.name}` : vid;
         }),
+        vehicles: spot.vehicles,
+        prices: spot.prices,
         image: spot.image,
+        description: spot.description,
         location: 'Metro Manila, Philippines',
-        rating: 4.5,
-        reviewCount: 3,
+        rating: spot.rating || 4.5,
+        reviewCount: spot.reviewCount || 3,
       }));
   };
 
@@ -1278,7 +1405,7 @@ export default function MapScreen() {
     }
   }, [coords, bookedSpotId]);
 
-  // Dynamically update map markers when vehicle type selection changes
+  // Dynamically update map markers when vehicle type selection or filters change
   useEffect(() => {
     if (coords) {
       const filtered = buildMarkersPayload(selectedVehicle, coords);
@@ -1287,7 +1414,7 @@ export default function MapScreen() {
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [selectedVehicle]);
+  }, [selectedVehicle, hideFullSpaces, maxPrice, minStars, selectedAmenities.join(',')]);
 
   // Listen for viewMore messages from the iframe on web
   useEffect(() => {
@@ -1296,12 +1423,7 @@ export default function MapScreen() {
       try {
         const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
         if (data && data.type === 'viewMore' && data.spot) {
-          const detailHtml = buildParkingDetailPage(data.spot);
-          const newTab = window.open('', '_blank');
-          if (newTab) {
-            newTab.document.write(detailHtml);
-            newTab.document.close();
-          }
+          openParkingDetails(data.spot);
         } else if (data && data.type === 'viewDirections') {
           if (data.spotId) {
             const spot = BASE_PARKING_SPACES.find(s => s.id === data.spotId);
@@ -1309,7 +1431,7 @@ export default function MapScreen() {
               setBookedSpot(spot);
               setBookedSpotId(data.spotId);
               setHasArrived(false);
-              setTimeToArrive(1500);
+              setTimeToArrive(1800);
               setParkingTime(0);
               hasDrawnRoute.current = false;
               
@@ -1326,6 +1448,11 @@ export default function MapScreen() {
           }
         } else if (data && data.type === 'cancelBooking') {
           handleCancelBooking(false);
+        } else if (data && data.type === 'requestDeparture') {
+          handleRequestDeparturePress();
+        } else if (data && data.type === 'noSlotsError') {
+          setNoSlotsSpotName(data.spotName || '');
+          setActiveModal('no_slots');
         }
       } catch (e) {
         // Silent catch
@@ -1333,7 +1460,7 @@ export default function MapScreen() {
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, []);
+  }, [bookedSpotId, hasArrived, selectedVehicle]);
 
   // Handle messages from native WebView
   const handleNativeMessage = (event: any) => {
@@ -1342,7 +1469,7 @@ export default function MapScreen() {
         ? JSON.parse(event.nativeEvent.data)
         : event.nativeEvent.data;
       if (data && data.type === 'viewMore' && data.spot) {
-        setViewMoreHtml(buildParkingDetailPage(data.spot));
+        openParkingDetails(data.spot);
       } else if (data && data.type === 'viewDirections') {
         setViewMoreHtml(null); // Close the detail Modal
         if (data.spotId) {
@@ -1351,7 +1478,7 @@ export default function MapScreen() {
             setBookedSpot(spot);
             setBookedSpotId(data.spotId);
             setHasArrived(false);
-            setTimeToArrive(1500);
+            setTimeToArrive(1800);
             setParkingTime(0);
             hasDrawnRoute.current = false;
             
@@ -1369,20 +1496,31 @@ export default function MapScreen() {
       } else if (data && data.type === 'cancelBooking') {
         setViewMoreHtml(null); // Close modal if open
         handleCancelBooking(false);
+      } else if (data && data.type === 'requestDeparture') {
+        setViewMoreHtml(null); // Close modal if open
+        handleRequestDeparturePress();
+      } else if (data && data.type === 'noSlotsError') {
+        setViewMoreHtml(null); // Close modal if open
+        setNoSlotsSpotName(data.spotName || '');
+        setActiveModal('no_slots');
       }
     } catch (e) {
       // Silent catch
     }
   };
 
-  const handleRecenter = () => {
-    requestLocation();
-    if (coords && bookedSpotId) {
-      const spot = BASE_PARKING_SPACES.find(s => s.id === bookedSpotId);
-      if (spot) {
-        const spotLat = coords.latitude + spot.offsetLat;
-        const spotLng = coords.longitude + spot.offsetLng;
-        drawRouteOnMap(coords.latitude, coords.longitude, spotLat, spotLng, true);
+  const handleRecenter = async () => {
+    const freshCoords = await requestLocation();
+    const activeCoords = freshCoords || coords;
+    if (activeCoords) {
+      sendLocationToMap(activeCoords.latitude, activeCoords.longitude, 16, true);
+      if (bookedSpotId) {
+        const spot = BASE_PARKING_SPACES.find(s => s.id === bookedSpotId);
+        if (spot) {
+          const spotLat = activeCoords.latitude + spot.offsetLat;
+          const spotLng = activeCoords.longitude + spot.offsetLng;
+          drawRouteOnMap(activeCoords.latitude, activeCoords.longitude, spotLat, spotLng, true);
+        }
       }
     }
   };
@@ -1437,6 +1575,28 @@ export default function MapScreen() {
 
         {/* Floating Controls - adjusted position to float above collapsed sheet */}
         <TouchableOpacity
+          style={styles.filterButton}
+          onPress={() => {
+            setTempHideFullSpaces(hideFullSpaces);
+            setTempMaxPrice(maxPrice);
+            setTempMinStars(minStars);
+            setTempSelectedAmenities([...selectedAmenities]);
+            setActiveModal('filter');
+          }}
+          activeOpacity={0.8}
+        >
+          <SymbolView
+            name={{ ios: 'slider.horizontal.3', android: 'filter_list', web: 'filter_list' } as any}
+            size={22}
+            tintColor={BrandColors.navy}
+            fallback={<Text style={{ fontSize: 22 }}>🎛️</Text>}
+          />
+          {(hideFullSpaces || maxPrice < 200 || minStars > 0 || selectedAmenities.length > 0) && (
+            <View style={styles.filterBadgeDot} />
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={styles.recenterButton}
           onPress={handleRecenter}
           activeOpacity={0.8}
@@ -1482,7 +1642,11 @@ export default function MapScreen() {
             {bookedSpotId && bookedSpot ? (
               <View style={styles.bookedContainer}>
                 {/* Space Info Card */}
-                <View style={styles.bookedInfoCard}>
+                <TouchableOpacity
+                  style={styles.bookedInfoCard}
+                  onPress={() => openParkingDetails(bookedSpot)}
+                  activeOpacity={0.85}
+                >
                   <Image
                     source={{ uri: bookedSpot.image }}
                     style={styles.bookedSpaceImage}
@@ -1499,8 +1663,20 @@ export default function MapScreen() {
                         ₱{(bookedSpot.prices as Record<string, number>)[selectedVehicle] ?? 0}/hr
                       </Text>
                     </View>
+                    <View style={styles.bookedRateRow}>
+                      <Text style={styles.bookedRateLabel}>Slots Available: </Text>
+                      <Text style={[styles.bookedRateValue, { color: bookedSpot.slots > 0 ? BrandColors.teal : '#dc2626' }]}>
+                        {bookedSpot.slots > 0 ? `${bookedSpot.slots} slots` : 'No slots'}
+                      </Text>
+                    </View>
+                    <View style={styles.bookedVehicleRow}>
+                      <Text style={styles.bookedVehicleLabel}>Vehicle: </Text>
+                      <Text style={styles.bookedVehicleValue}>
+                        {VEHICLES.find(v => v.id === selectedVehicle)?.emoji} {VEHICLES.find(v => v.id === selectedVehicle)?.name}
+                      </Text>
+                    </View>
                   </View>
-                </View>
+                </TouchableOpacity>
 
                 {/* Timers Row */}
                 <View style={styles.timerRow}>
@@ -1511,7 +1687,7 @@ export default function MapScreen() {
                       {hasArrived ? 'Arrived 🅿️' : formatTimeToArrive(timeToArrive)}
                     </Text>
                     <Text style={styles.timerCardSubtitle}>
-                      {hasArrived ? 'Arrived at space' : 'Arrive within 25 mins'}
+                      {hasArrived ? 'Arrived at space' : 'Arrive within 30 mins'}
                     </Text>
                   </View>
 
@@ -1592,74 +1768,33 @@ export default function MapScreen() {
             {/* Recently Parked Spaces Section */}
             <View style={styles.pastSpacesSection}>
               <Text style={styles.sectionTitle}>Recently Parked Spaces</Text>
-              {BASE_PARKING_SPACES.filter((spot) => spot.vehicles.includes(selectedVehicle)).length === 0 ? (
-                <Text style={styles.noSpacesText}>No available parking spaces for this vehicle type.</Text>
+              {BASE_PARKING_SPACES.filter(
+                (spot) => RECENT_SPACES_IDS.includes(spot.id) && spot.vehicles.includes(selectedVehicle)
+              ).length === 0 ? (
+                <Text style={styles.noSpacesText}>No recently parked spaces for this vehicle type.</Text>
               ) : (
                 BASE_PARKING_SPACES
-                  .filter((spot) => spot.vehicles.includes(selectedVehicle))
-                  .map((space) => {
-                    const isExpanded = !!expandedSpaces[space.id];
-                    const vehiclePrice = (space.prices as Record<string, number>)[selectedVehicle] ?? 0;
-                    const vehicleName = VEHICLES.find((v) => v.id === selectedVehicle)?.name || 'Vehicle';
-                    return (
-                      <View key={space.id} style={styles.spaceCard}>
-                        <TouchableOpacity
-                          style={styles.spaceHeaderPressable}
-                          onPress={() => {
-                            toggleSpaceExpand(space.id);
-                            focusSpotOnMap(space.id);
-                          }}
-                          activeOpacity={0.7}
-                        >
-                          <View style={styles.spaceIconContainer}>
-                            <Text style={styles.spaceIcon}>🅿️</Text>
-                          </View>
-                          <View style={styles.spaceInfo}>
-                            <Text style={styles.spaceName}>{space.name}</Text>
-                            <View style={styles.spaceMetaRow}>
-                              <View style={styles.slotsBadge}>
-                                <Text style={styles.slotsBadgeText}>{space.slots} slots left</Text>
-                              </View>
-                              <Text style={styles.spacePriceText}>
-                                {vehicleName} Price: ₱{vehiclePrice}/hr
-                              </Text>
-                            </View>
-                          </View>
-                          <Text style={styles.expandToggleText}>
-                            {isExpanded ? 'Show Less ▲' : 'Show More ▼'}
-                          </Text>
-                        </TouchableOpacity>
-
-                        {isExpanded && (
-                          <View style={styles.expandedContent}>
-                            <Image
-                              source={{ uri: space.image }}
-                              style={styles.spaceDetailImage}
-                              contentFit="cover"
-                              transition={200}
-                            />
-                            <Text style={styles.spaceDescriptionText}>
-                              {space.description}
-                            </Text>
-                            <View style={styles.amenitiesContainer}>
-                              {space.amenities.map((amenity, idx) => (
-                                <View key={idx} style={styles.amenityBadge}>
-                                  <Text style={styles.amenityBadgeText}>{amenity}</Text>
-                                </View>
-                              ))}
-                            </View>
-                            <TouchableOpacity
-                              style={styles.bookButton}
-                              onPress={() => handleBookPress(space, vehiclePrice)}
-                              activeOpacity={0.8}
-                            >
-                              <Text style={styles.bookButtonText}>Book Now</Text>
-                            </TouchableOpacity>
-                          </View>
-                        )}
+                  .filter((spot) => RECENT_SPACES_IDS.includes(spot.id) && spot.vehicles.includes(selectedVehicle))
+                  .map((space) => (
+                    <TouchableOpacity
+                      key={space.id}
+                      style={styles.recentSpaceItem}
+                      onPress={() => focusSpotOnMap(space.id)}
+                      activeOpacity={0.75}
+                    >
+                      <View style={styles.recentSpaceLeft}>
+                        <View style={styles.recentSpaceIconContainer}>
+                          <Text style={styles.recentSpaceIcon}>🕒</Text>
+                        </View>
+                        <Text style={styles.recentSpaceName} numberOfLines={1}>
+                          {space.name}
+                        </Text>
                       </View>
-                    );
-                  })
+                      <View style={styles.recentSpaceRight}>
+                        <Text style={styles.recentSpaceArrow}>→</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))
               )}
             </View>
             </>
@@ -1712,9 +1847,13 @@ export default function MapScreen() {
 
       {/* Custom Modal overlay system */}
       {activeModal !== null && (
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        >
           <TouchableWithoutFeedback onPress={() => {
-            if (activeModal === 'confirm_book' || activeModal === 'cancel_confirm') {
+            if (activeModal === 'confirm_book' || activeModal === 'cancel_confirm' || activeModal === 'filter') {
               setActiveModal(null);
             }
           }}>
@@ -1731,10 +1870,16 @@ export default function MapScreen() {
                   </TouchableOpacity>
                 </View>
                 <Text style={styles.modalDesc}>
-                  Reserve a slot at <Text style={styles.boldText}>{modalTargetSpace.name}</Text> for your <Text style={styles.boldText}>{VEHICLES.find(v => v.id === selectedVehicle)?.name || 'vehicle'}</Text>.
+                  Reserve a slot at <Text style={styles.boldText}>{modalTargetSpace.name}</Text> for your <Text style={styles.boldText}>{VEHICLES.find(v => v.id === selectedVehicle)?.name || 'vehicle'}</Text>. The reservation fee covers the first 30 minutes of parking free of charge.
                 </Text>
                 
                 <View style={styles.bookingSummaryBox}>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Vehicle Type:</Text>
+                    <Text style={styles.summaryVal}>
+                      {VEHICLES.find(v => v.id === selectedVehicle)?.emoji} {VEHICLES.find(v => v.id === selectedVehicle)?.name}
+                    </Text>
+                  </View>
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Hourly Rate:</Text>
                     <Text style={styles.summaryVal}>₱{modalTargetPrice}/hr</Text>
@@ -1767,8 +1912,21 @@ export default function MapScreen() {
                 </View>
                 <Text style={styles.modalTitle}>Booking Confirmed!</Text>
                 <Text style={[styles.modalDesc, { textAlign: 'center' }]}>
-                  Successfully reserved a slot at <Text style={styles.boldText}>{bookedSpot?.name}</Text>. Please arrive within 25 minutes.
+                  Successfully reserved a slot at <Text style={styles.boldText}>{bookedSpot?.name}</Text>. Please arrive within 30 minutes.
                 </Text>
+
+                <View style={[styles.bookingSummaryBox, { width: '100%', marginTop: Spacing.three, marginBottom: Spacing.one }]}>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Parking Space:</Text>
+                    <Text style={styles.summaryVal}>{bookedSpot?.name}</Text>
+                  </View>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Vehicle Booked:</Text>
+                    <Text style={styles.summaryVal}>
+                      {VEHICLES.find(v => v.id === selectedVehicle)?.emoji} {VEHICLES.find(v => v.id === selectedVehicle)?.name}
+                    </Text>
+                  </View>
+                </View>
                 
                 <TouchableOpacity style={[styles.modalPrimaryBtn, { width: '100%', marginTop: Spacing.three }]} onPress={() => setActiveModal(null)}>
                   <Text style={styles.modalPrimaryText}>View Directions</Text>
@@ -1832,7 +1990,7 @@ export default function MapScreen() {
                 </Text>
                 
                 <TouchableOpacity style={[styles.modalPrimaryBtn, { width: '100%', marginTop: Spacing.three }]} onPress={() => setActiveModal(null)}>
-                  <Text style={styles.modalPrimaryText}>OK, Let's Park</Text>
+                  <Text style={styles.modalPrimaryText}>OK</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -1865,8 +2023,24 @@ export default function MapScreen() {
 
                     <View style={[styles.bookingSummaryBox, { width: '100%' }]}>
                       <View style={styles.summaryRow}>
+                        <Text style={styles.summaryLabel}>Vehicle Booked:</Text>
+                        <Text style={styles.summaryVal}>
+                          {VEHICLES.find(v => v.id === selectedVehicle)?.emoji} {VEHICLES.find(v => v.id === selectedVehicle)?.name}
+                        </Text>
+                      </View>
+                      <View style={styles.summaryRow}>
                         <Text style={styles.summaryLabel}>Time Occupied:</Text>
                         <Text style={styles.summaryVal}>{formatParkingTime(finalOccupiedTime)}</Text>
+                      </View>
+                      <View style={styles.summaryRow}>
+                        <Text style={styles.summaryLabel}>Covered Time (Reservation):</Text>
+                        <Text style={[styles.summaryVal, { color: BrandColors.teal }]}>First 30 mins (Free)</Text>
+                      </View>
+                      <View style={styles.summaryRow}>
+                        <Text style={styles.summaryLabel}>Billable Time:</Text>
+                        <Text style={styles.summaryVal}>
+                          {formatParkingTime(Math.max(0, finalOccupiedTime - 1800))}
+                        </Text>
                       </View>
                       <View style={styles.summaryRow}>
                         <Text style={styles.summaryLabel}>Hourly Rate:</Text>
@@ -1885,7 +2059,9 @@ export default function MapScreen() {
                 ) : (
                   <View style={{ width: '100%', alignItems: 'center' }}>
                     <View style={[styles.modalIconContainer, { backgroundColor: 'rgba(10, 124, 110, 0.1)' }]}>
-                      <Text style={styles.modalSuccessIcon}>🚗</Text>
+                      <Text style={styles.modalSuccessIcon}>
+                        {VEHICLES.find(v => v.id === selectedVehicle)?.emoji || '🚗'}
+                      </Text>
                     </View>
                     <Text style={styles.modalTitle}>Departure Approved!</Text>
                     <Text style={[styles.modalDesc, { textAlign: 'center', marginBottom: Spacing.three }]}>
@@ -1894,8 +2070,24 @@ export default function MapScreen() {
 
                     <View style={[styles.bookingSummaryBox, { width: '100%' }]}>
                       <View style={styles.summaryRow}>
+                        <Text style={styles.summaryLabel}>Vehicle Booked:</Text>
+                        <Text style={styles.summaryVal}>
+                          {VEHICLES.find(v => v.id === selectedVehicle)?.emoji} {VEHICLES.find(v => v.id === selectedVehicle)?.name}
+                        </Text>
+                      </View>
+                      <View style={styles.summaryRow}>
                         <Text style={styles.summaryLabel}>Time Occupied:</Text>
                         <Text style={styles.summaryVal}>{formatParkingTime(finalOccupiedTime)}</Text>
+                      </View>
+                      <View style={styles.summaryRow}>
+                        <Text style={styles.summaryLabel}>Covered Time (Reservation):</Text>
+                        <Text style={[styles.summaryVal, { color: BrandColors.teal }]}>First 30 mins (Free)</Text>
+                      </View>
+                      <View style={styles.summaryRow}>
+                        <Text style={styles.summaryLabel}>Billable Time:</Text>
+                        <Text style={styles.summaryVal}>
+                          {formatParkingTime(Math.max(0, finalOccupiedTime - 1800))}
+                        </Text>
                       </View>
                       <View style={styles.summaryRow}>
                         <Text style={styles.summaryLabel}>Total Paid:</Text>
@@ -1911,15 +2103,293 @@ export default function MapScreen() {
                       </View>
                     </View>
 
-                    <TouchableOpacity style={[styles.modalPrimaryBtn, { width: '100%' }]} onPress={handleDepartureComplete}>
+                    <TouchableOpacity
+                      style={[styles.modalPrimaryBtn, { width: '100%' }]}
+                      onPress={() => {
+                        setRatingStars(5);
+                        setRatingComment('');
+                        setActiveModal('rate_parking');
+                      }}
+                    >
                       <Text style={styles.modalPrimaryText}>Done</Text>
                     </TouchableOpacity>
                   </View>
                 )}
               </View>
             )}
-          </View>
-        </View>
+
+            {activeModal === 'rate_parking' && (
+              <View style={styles.centeredContent}>
+                <View style={[styles.modalIconContainer, { backgroundColor: 'rgba(242, 146, 33, 0.1)' }]}>
+                  <Text style={[styles.modalSuccessIcon, { color: BrandColors.orange }]}>⭐</Text>
+                </View>
+                <Text style={styles.modalTitle}>Rate Parking Space</Text>
+                <Text style={[styles.modalDesc, { textAlign: 'center', marginBottom: Spacing.two }]}>
+                  How was your experience at <Text style={styles.boldText}>{bookedSpot?.name || 'the parking space'}</Text>?
+                </Text>
+
+                <View style={styles.starsRow}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <TouchableOpacity
+                      key={star}
+                      onPress={() => setRatingStars(star)}
+                      activeOpacity={0.7}
+                      style={styles.starTouch}
+                    >
+                      <Text style={star <= ratingStars ? styles.starIconActive : styles.starIconInactive}>
+                        ★
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <TextInput
+                  style={[styles.commentInput, { width: '100%' }]}
+                  placeholder="Share your experience (optional)..."
+                  placeholderTextColor="#94a3b8"
+                  multiline
+                  numberOfLines={3}
+                  value={ratingComment}
+                  onChangeText={setRatingComment}
+                />
+
+                <View style={[styles.modalActions, { width: '100%' }]}>
+                  <TouchableOpacity style={[styles.modalSecondaryBtn, { flex: 1 }]} onPress={handleDepartureComplete}>
+                    <Text style={styles.modalSecondaryText}>Skip</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.modalPrimaryBtn, { flex: 1.5 }]} onPress={submitReview}>
+                    <Text style={styles.modalPrimaryText}>Submit Review</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {activeModal === 'review_success' && (
+              <View style={styles.centeredContent}>
+                <View style={styles.modalIconContainer}>
+                  <Text style={styles.modalSuccessIcon}>🎉</Text>
+                </View>
+                <Text style={styles.modalTitle}>Review Submitted!</Text>
+                <Text style={[styles.modalDesc, { textAlign: 'center' }]}>
+                  Thank you for rating <Text style={styles.boldText}>{bookedSpot?.name || 'this space'}</Text> {ratingStars} stars!
+                </Text>
+                {ratingComment.trim().length > 0 && (
+                  <View style={[styles.bookingSummaryBox, { width: '100%', marginTop: Spacing.two, marginBottom: Spacing.one, padding: Spacing.two }]}>
+                    <Text style={[styles.summaryLabel, { marginBottom: 4 }]}>Your comment:</Text>
+                    <Text style={[styles.summaryVal, { fontWeight: '500', color: '#475569', textAlign: 'left' }]} numberOfLines={3}>
+                      "{ratingComment.trim()}"
+                    </Text>
+                  </View>
+                )}
+                <TouchableOpacity
+                  style={[styles.modalPrimaryBtn, { width: '100%', marginTop: Spacing.three }]}
+                  onPress={handleDepartureComplete}
+                >
+                  <Text style={styles.modalPrimaryText}>OK</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {activeModal === 'no_slots' && (
+              <View style={styles.centeredContent}>
+                <View style={[styles.modalIconContainer, { backgroundColor: 'rgba(242, 146, 33, 0.1)', borderColor: BrandColors.orange }]}>
+                  <Text style={[styles.modalSuccessIcon, { color: BrandColors.orange }]}>⚠️</Text>
+                </View>
+                <Text style={styles.modalTitle}>No Slots Available</Text>
+                <Text style={[styles.modalDesc, { textAlign: 'center', marginBottom: Spacing.three }]}>
+                  We are sorry, but <Text style={styles.boldText}>{noSlotsSpotName}</Text> is currently full. Please try booking another parking space.
+                </Text>
+                
+                <TouchableOpacity
+                  style={[styles.modalPrimaryBtn, { width: '100%', marginTop: Spacing.three }]}
+                  onPress={() => setActiveModal(null)}
+                >
+                  <Text style={styles.modalPrimaryText}>OK</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {activeModal === 'filter' && (
+              <View style={{ width: '100%' }}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Filter Parking</Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setTempHideFullSpaces(false);
+                      setTempMaxPrice(200);
+                      setTempMinStars(0);
+                      setTempSelectedAmenities([]);
+                    }}
+                    style={styles.resetAllBtn}
+                  >
+                    <Text style={styles.resetAllText}>Reset All</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Filter Section: Slots Toggle */}
+                <View style={styles.filterRow}>
+                  <View style={{ flex: 1, paddingRight: Spacing.two }}>
+                    <Text style={styles.filterLabel}>Show Available Slots Only</Text>
+                    <Text style={styles.filterSubLabel}>Hide parking spaces with 0 slots available</Text>
+                  </View>
+                  <Switch
+                    trackColor={{ false: '#cbd5e1', true: BrandColors.teal }}
+                    thumbColor={tempHideFullSpaces ? '#ffffff' : '#f4f3f4'}
+                    ios_backgroundColor="#cbd5e1"
+                    onValueChange={setTempHideFullSpaces}
+                    value={tempHideFullSpaces}
+                  />
+                </View>
+
+                <View style={styles.filterDivider} />
+
+                {/* Filter Section: Price Range */}
+                <View style={styles.filterSectionContainer}>
+                  <Text style={styles.filterSectionTitle}>Max Price Per Hour</Text>
+                  <View style={styles.priceAdjusterRow}>
+                    <TouchableOpacity
+                      style={styles.adjustBtn}
+                      onPress={() => setTempMaxPrice((prev) => Math.max(10, prev === 200 ? 120 : prev - 5))}
+                    >
+                      <Text style={styles.adjustBtnText}>−</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.adjustValue}>
+                      {tempMaxPrice >= 200 ? 'Any Price' : `₱${tempMaxPrice}`}
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.adjustBtn}
+                      onPress={() => setTempMaxPrice((prev) => (prev >= 120 ? 200 : prev + 5))}
+                    >
+                      <Text style={styles.adjustBtnText}>+</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.presetRow}>
+                    {[30, 50, 80, 200].map((val) => (
+                      <TouchableOpacity
+                        key={val}
+                        style={[
+                          styles.presetBtn,
+                          tempMaxPrice === val && styles.activePresetBtn,
+                        ]}
+                        onPress={() => setTempMaxPrice(val)}
+                      >
+                        <Text
+                          style={[
+                            styles.presetBtnText,
+                            tempMaxPrice === val && styles.activePresetBtnText,
+                          ]}
+                        >
+                          {val === 200 ? 'Any' : `₱${val}`}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.filterDivider} />
+
+                {/* Filter Section: Ratings */}
+                <View style={styles.filterSectionContainer}>
+                  <Text style={styles.filterSectionTitle}>Minimum Rating</Text>
+                  <View style={styles.starsFilterRow}>
+                    {[
+                      { val: 0, label: 'Any' },
+                      { val: 3, label: '3★+' },
+                      { val: 4, label: '4★+' },
+                      { val: 5, label: '5★' },
+                    ].map((item) => (
+                      <TouchableOpacity
+                        key={item.val}
+                        style={[
+                          styles.starFilterBtn,
+                          tempMinStars === item.val && styles.activeStarFilterBtn,
+                        ]}
+                        onPress={() => setTempMinStars(item.val)}
+                      >
+                        <Text
+                          style={[
+                            styles.starFilterBtnText,
+                            tempMinStars === item.val && styles.activeStarFilterBtnText,
+                          ]}
+                        >
+                          {item.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.filterDivider} />
+
+                {/* Filter Section: Amenities */}
+                <View style={styles.filterSectionContainer}>
+                  <Text style={styles.filterSectionTitle}>Amenities & Features</Text>
+                  <View style={styles.amenitiesFilterGrid}>
+                    {[
+                      'Gated Property',
+                      'CCTV Monitoring',
+                      'Lighting',
+                      'Covered Roof',
+                      'Cement Pavement',
+                      '24/7 Security',
+                    ].map((amenity) => {
+                      const isSelected = tempSelectedAmenities.includes(amenity);
+                      return (
+                        <TouchableOpacity
+                          key={amenity}
+                          style={[
+                            styles.amenityFilterPill,
+                            isSelected && styles.activeAmenityFilterPill,
+                          ]}
+                          onPress={() => {
+                            if (isSelected) {
+                              setTempSelectedAmenities((prev) =>
+                                prev.filter((a) => a !== amenity)
+                              );
+                            } else {
+                              setTempSelectedAmenities((prev) => [...prev, amenity]);
+                            }
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.amenityFilterPillText,
+                              isSelected && styles.activeAmenityFilterPillText,
+                            ]}
+                          >
+                            {amenity}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                <View style={[styles.modalActions, { marginTop: Spacing.four }]}>
+                  <TouchableOpacity
+                    style={[styles.modalSecondaryBtn, { flex: 1 }]}
+                    onPress={() => setActiveModal(null)}
+                  >
+                    <Text style={styles.modalSecondaryText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.modalPrimaryBtn, { flex: 1.5 }]}
+                    onPress={() => {
+                      setHideFullSpaces(tempHideFullSpaces);
+                      setMaxPrice(tempMaxPrice);
+                      setMinStars(tempMinStars);
+                      setSelectedAmenities(tempSelectedAmenities);
+                      setActiveModal(null);
+                    }}
+                  >
+                    <Text style={styles.modalPrimaryText}>Apply Filters</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+            </View>
+        </KeyboardAvoidingView>
       )}
     </SafeAreaView>
   );
@@ -2173,129 +2643,54 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     marginBottom: Spacing.two,
   },
-  spaceCard: {
+  recentSpaceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: BrandColors.white,
     borderWidth: 1.5,
     borderColor: 'rgba(38, 63, 79, 0.08)',
-    borderRadius: 16,
-    backgroundColor: BrandColors.white,
-    padding: Spacing.three,
-    marginBottom: Spacing.three,
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: Spacing.two,
     shadowColor: BrandColors.navy,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
+    shadowOpacity: 0.02,
+    shadowRadius: 3,
     elevation: 1,
   },
-  spaceHeaderPressable: {
+  recentSpaceLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.three,
-    paddingVertical: Spacing.one,
-  },
-  spaceIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(38, 63, 79, 0.06)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  spaceIcon: {
-    fontSize: 20,
-  },
-  spaceInfo: {
+    gap: 12,
     flex: 1,
   },
-  spaceName: {
-    fontSize: 15,
-    fontWeight: '900',
-    color: BrandColors.navy,
-  },
-  spaceMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 4,
-  },
-  slotsBadge: {
+  recentSpaceIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: 'rgba(10, 124, 110, 0.08)',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(10, 124, 110, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  slotsBadgeText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: BrandColors.teal,
+  recentSpaceIcon: {
+    fontSize: 16,
   },
-  spacePriceText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: BrandColors.orange,
-  },
-  expandToggleText: {
-    fontSize: 11,
+  recentSpaceName: {
+    fontSize: 14,
     fontWeight: '800',
     color: BrandColors.navy,
-    paddingHorizontal: 4,
+    flex: 1,
   },
-  expandedContent: {
-    marginTop: Spacing.two,
-    paddingTop: Spacing.three,
-    borderTopWidth: 1.5,
-    borderTopColor: 'rgba(38, 63, 79, 0.05)',
-  },
-  spaceDetailImage: {
-    width: '100%',
-    height: 150,
-    borderRadius: 12,
-    backgroundColor: '#cbd5e1',
-    marginBottom: Spacing.three,
-  },
-  spaceDescriptionText: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: '#475569',
-    fontWeight: '600',
-    marginBottom: Spacing.three,
-  },
-  amenitiesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: Spacing.four,
-  },
-  amenityBadge: {
-    backgroundColor: '#f1f5f9',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  amenityBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#475569',
-  },
-  bookButton: {
-    backgroundColor: BrandColors.teal,
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: 'center',
+  recentSpaceRight: {
     justifyContent: 'center',
-    shadowColor: BrandColors.teal,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    alignItems: 'center',
   },
-  bookButtonText: {
-    color: BrandColors.white,
-    fontSize: 14,
+  recentSpaceArrow: {
+    fontSize: 16,
     fontWeight: '900',
+    color: BrandColors.teal,
   },
   noSpacesText: {
     fontSize: 14,
@@ -2359,6 +2754,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: BrandColors.orange,
     fontWeight: '900',
+  },
+  bookedVehicleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  bookedVehicleLabel: {
+    fontSize: 12,
+    color: '#64748b',
+    fontWeight: '700',
+  },
+  bookedVehicleValue: {
+    fontSize: 13,
+    color: BrandColors.navy,
+    fontWeight: '800',
   },
   timerRow: {
     flexDirection: 'row',
@@ -2540,11 +2950,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: '#64748b',
+    flex: 1.2,
   },
   summaryVal: {
     fontSize: 13,
     fontWeight: '900',
     color: BrandColors.navy,
+    flex: 1,
+    textAlign: 'right',
   },
   summaryDivider: {
     borderTopWidth: 1.5,
@@ -2599,6 +3012,216 @@ const styles = StyleSheet.create({
   },
   modalSuccessIcon: {
     fontSize: 32,
+    color: BrandColors.teal,
+  },
+  starsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: Spacing.two,
+    marginVertical: Spacing.three,
+  },
+  starTouch: {
+    padding: 4,
+  },
+  starIconActive: {
+    fontSize: 38,
+    color: BrandColors.orange,
+  },
+  starIconInactive: {
+    fontSize: 38,
+    color: '#cbd5e1',
+  },
+  commentInput: {
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 14,
+    color: BrandColors.navy,
+    backgroundColor: '#f8fafc',
+    textAlignVertical: 'top',
+    height: 80,
+    marginBottom: Spacing.four,
+    fontWeight: '600',
+  },
+  filterButton: {
+    position: 'absolute',
+    bottom: 202,
+    right: Spacing.three,
+    backgroundColor: BrandColors.white,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: 2,
+    borderColor: BrandColors.navy,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: BrandColors.navy,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 5,
+    zIndex: 15,
+  },
+  filterBadgeDot: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: BrandColors.orange,
+    borderWidth: 2,
+    borderColor: BrandColors.white,
+  },
+  resetAllBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  resetAllText: {
+    color: BrandColors.orange,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  filterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Spacing.two,
+  },
+  filterLabel: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: BrandColors.navy,
+  },
+  filterSubLabel: {
+    fontSize: 11,
+    color: '#64748b',
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  filterDivider: {
+    height: 1,
+    backgroundColor: 'rgba(38, 63, 79, 0.08)',
+    marginVertical: Spacing.two,
+  },
+  filterSectionContainer: {
+    paddingVertical: Spacing.one,
+  },
+  filterSectionTitle: {
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    color: BrandColors.navy,
+    letterSpacing: 1,
+    marginBottom: Spacing.two,
+  },
+  priceAdjusterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.four,
+    marginBottom: Spacing.two,
+  },
+  adjustBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  adjustBtnText: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: BrandColors.navy,
+    lineHeight: 22,
+  },
+  adjustValue: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: BrandColors.navy,
+    minWidth: 100,
+    textAlign: 'center',
+  },
+  presetRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+    marginTop: Spacing.one,
+  },
+  presetBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+  },
+  presetBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#64748b',
+  },
+  activePresetBtn: {
+    borderColor: BrandColors.orange,
+    backgroundColor: 'rgba(242, 146, 33, 0.08)',
+  },
+  activePresetBtnText: {
+    color: BrandColors.orange,
+  },
+  starsFilterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
+  starFilterBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+  },
+  starFilterBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#64748b',
+  },
+  activeStarFilterBtn: {
+    borderColor: BrandColors.orange,
+    backgroundColor: 'rgba(242, 146, 33, 0.08)',
+  },
+  activeStarFilterBtnText: {
+    color: BrandColors.orange,
+  },
+  amenitiesFilterGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+  },
+  amenityFilterPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+  },
+  amenityFilterPillText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#64748b',
+  },
+  activeAmenityFilterPill: {
+    borderColor: BrandColors.teal,
+    backgroundColor: 'rgba(10, 124, 110, 0.08)',
+  },
+  activeAmenityFilterPillText: {
     color: BrandColors.teal,
   },
 });
