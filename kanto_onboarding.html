@@ -110,7 +110,7 @@ html,body{height:100%;background:#080400;display:flex;align-items:center;justify
 .sc-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;background:rgba(45,158,117,0.15);color:var(--teal-l);border:1px solid rgba(45,158,117,0.3);margin-top:3px}
 
 /* Description cards below map */
-.desc-cards{display:flex;flex-direction:column;gap:8px;width:100%}
+.desc-cards{display:flex;flex-direction:column;gap:8px;width:100%;margin-top: 2rem;}
 .desc-card{border-radius:14px;padding:12px 14px;display:flex;align-items:flex-start;gap:12px;opacity:0;transform:translateY(12px);transition:opacity 0.45s ease,transform 0.45s cubic-bezier(0.34,1.2,0.64,1)}
 .desc-card.vis{opacity:1;transform:translateY(0)}
 .desc-card-amber{background:rgba(193,123,42,0.07);border:1px solid rgba(193,123,42,0.14)}
@@ -244,6 +244,18 @@ html,body{height:100%;background:#080400;display:flex;align-items:center;justify
 .role-arrow{font-size:17px;color:rgba(255,255,255,0.2)}
 .s5-confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 
+/* S3 step progress + features */
+.wt-prog-wrap{height:2px;background:rgba(255,255,255,0.06);overflow:hidden}
+.wt-prog-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--teal),var(--teal-l))}
+.s3-feats{display:flex;gap:8px;width:100%;opacity:0;transition:opacity 0.5s ease;margin-top:16px}
+.s3-feats.vis{opacity:1}
+.s3-feat{flex:1;border-radius:12px;padding:10px 8px;text-align:center;border:1px solid transparent}
+.s3-feat:nth-child(1){background:rgba(99,179,237,0.08);border-color:rgba(99,179,237,0.18)}
+.s3-feat:nth-child(2){background:rgba(154,117,236,0.08);border-color:rgba(154,117,236,0.18)}
+.s3-feat:nth-child(3){background:rgba(72,187,120,0.08);border-color:rgba(72,187,120,0.18)}
+.s3-feat-title{font-size:10px;font-weight:700;color:rgba(255,255,255,0.65);margin-bottom:2px}
+.s3-feat-sub{font-size:9px;color:rgba(255,255,255,0.3);line-height:1.4}
+
 /* ════ KEYFRAMES ════ */
 @keyframes ringPulse{0%,100%{opacity:0.4;transform:translate(-50%,-50%) scale(1)}50%{opacity:0.12;transform:translate(-50%,-50%) scale(1.04)}}
 @keyframes logoIn{from{opacity:0;transform:scale(0.4) rotate(-10deg)}to{opacity:1;transform:scale(1) rotate(0deg)}}
@@ -260,6 +272,8 @@ html,body{height:100%;background:#080400;display:flex;align-items:center;justify
 @keyframes slideInLeft{from{opacity:0;transform:translateX(-60px) scale(0.97)}to{opacity:1;transform:translateX(0) scale(1)}}
 @keyframes confettiFall{to{transform:translateY(900px) rotate(720deg);opacity:0}}
 @keyframes userRing{0%{transform:translate(-50%,-50%) scale(1);opacity:0.6}100%{transform:translate(-50%,-50%) scale(3);opacity:0}}
+@keyframes stepOut{to{opacity:0;transform:translateX(-16px)}}
+@keyframes stepIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
 </style>
 </head>
 <body>
@@ -300,9 +314,9 @@ html,body{height:100%;background:#080400;display:flex;align-items:center;justify
       <div class="welcome-eyebrow" id="w-eyebrow" style="opacity:0">The parking problem</div>
       <div class="welcome-title" id="w-title" style="opacity:0">Too many cars.<br><span class="kanto-grad">Too few spots.</span></div>
       <div class="welcome-divider" id="w-div" style="opacity:0"></div>
-      <div class="w-stat-callout" id="w-stat" style="opacity:0"><strong>3.5M+ vehicles</strong>in Metro Cebu and growing — yet parking infrastructure hasn't kept up.</div>
+      <div class="w-stat-callout" id="w-stat" style="opacity:0"><strong>3.5M+ vehicles</strong>in Metro Cebu and growing, yet parking infrastructure hasn't kept up.</div>
       <div class="w-solution" id="w-solve" style="opacity:0">There's a better way.</div>
-      <div class="welcome-desc" id="w-desc" style="opacity:0">Thousands of <em>unused driveways</em> and vacant lots sit idle every day. Kanto connects drivers who need parking with <em>hosts who have space</em> — safely and instantly.</div>
+      <div class="welcome-desc" id="w-desc" style="opacity:0">Thousands of <em>unused driveways</em> and vacant lots sit idle every day. Kanto connects drivers who need parking with <em>hosts who have space</em>: safely and instantly.</div>
     </div>
     <div style="padding:28px 36px 100px;position:relative;z-index:1">
       <button onclick="goTo(2)" style="width:100%;padding:15px;border-radius:14px;background:linear-gradient(135deg,#7C3D00,#C17B2A);color:white;border:none;font-size:15px;font-weight:800;cursor:pointer">See how it works →</button>
@@ -368,7 +382,7 @@ html,body{height:100%;background:#080400;display:flex;align-items:center;justify
           <div class="dc-icon">📡</div>
           <div class="dc-text">
             <div class="dc-title">Live availability, zero guessing</div>
-            <div class="dc-sub">Spot status updates in real time — green means go. No more driving in circles looking for space.</div>
+            <div class="dc-sub">Spot status updates in real time! Green means go. No more driving in circles looking for space.</div>
           </div>
         </div>
         <div class="desc-card desc-card-teal" id="dc2">
@@ -458,6 +472,7 @@ html,body{height:100%;background:#080400;display:flex;align-items:center;justify
               </div>
             </div>
           </div>
+          <div class="wt-prog-wrap"><div class="wt-prog-fill" id="wtprog"></div></div>
         </div>
       </div>
       <!-- Step dots -->
@@ -476,6 +491,11 @@ html,body{height:100%;background:#080400;display:flex;align-items:center;justify
           <div class="wt-step-dot" id="wsd2"></div>
           <div class="wt-step-label" id="wsl2">Confirmed</div>
         </div>
+      </div>
+      <div class="s3-feats" id="s3feats">
+        <div class="s3-feat"><div class="s3-feat-title">Instant confirm</div><div class="s3-feat-sub">Host notified right away</div></div>
+        <div class="s3-feat"><div class="s3-feat-title">Secure payment</div><div class="s3-feat-sub">GCash, Maya, or cash</div></div>
+        <div class="s3-feat"><div class="s3-feat-title">SMS receipt</div><div class="s3-feat-sub">Booking ref sent to you</div></div>
       </div>
     </div>
   </div>
@@ -549,10 +569,10 @@ function updateDots(n) {
   const pdots = document.getElementById('pdots');
   const skipbtn = document.getElementById('skipbtn');
   const nextbtn = document.getElementById('nextbtn');
-  if (n === 0) { pdots.style.display='none'; skipbtn.style.display='none'; nextbtn.style.display='none'; return; }
+  if (n === 0) { pdots.style.display='none'; skipbtn.style.display='none'; if(nextbtn) nextbtn.style.display='none'; return; }
   pdots.style.display = 'flex';
   skipbtn.style.display = n < 5 ? 'block' : 'none';
-  nextbtn.style.display = n >= 1 && n < 5 ? 'block' : 'none';
+  if(nextbtn) nextbtn.style.display = n >= 1 && n < 5 ? 'block' : 'none';
   for (let i = 0; i < 5; i++) {
     const d = document.getElementById('pd' + i);
     d.className = 'pdot' + (i === n-1 ? ' act' : '');
@@ -584,27 +604,57 @@ function enterS3() {
   setTimeout(() => {
     document.getElementById('phonewt').classList.add('vis');
     document.getElementById('wtsteps').classList.add('vis');
+    startStepProgress(0);
   }, 300);
+  setTimeout(() => document.getElementById('s3feats').classList.add('vis'), 900);
   wtStep = 0;
-  setWtStep(0);
-  // auto advance steps
+  setWtStep(0, true);
   if (wtTimer) clearTimeout(wtTimer);
   wtTimer = setTimeout(() => advanceWt(1), 1800);
 }
 
-function setWtStep(step) {
+function startStepProgress(step) {
+  const prog = document.getElementById('wtprog');
+  if (!prog) return;
+  prog.style.transition = 'none';
+  prog.style.width = '0%';
+  prog.offsetWidth;
+  if (step >= 2) {
+    prog.style.transition = 'width 0.4s ease';
+    prog.style.width = '100%';
+    return;
+  }
+  const dur = step === 0 ? 1500 : 1400;
+  prog.style.transition = `width ${dur}ms linear`;
+  prog.style.width = '100%';
+}
+
+function setWtStep(step, noAnimate) {
+  const prevStep = wtStep;
   wtStep = step;
-  ['wt-step1','wt-step2','wt-step3'].forEach((id,i) => {
-    document.getElementById(id).style.display = i === step ? 'block' : 'none';
-  });
-  const badge = document.getElementById('wt-badge');
-  badge.textContent = `Step ${step+1} of 3`;
-  // update step dots
+  document.getElementById('wt-badge').textContent = `Step ${step+1} of 3`;
   for (let i = 0; i < 3; i++) {
-    const dot = document.getElementById('wsd'+i);
-    const lbl = document.getElementById('wsl'+i);
-    dot.className = 'wt-step-dot' + (i <= step ? ' act' : '');
-    lbl.className = 'wt-step-label' + (i <= step ? ' act' : '');
+    document.getElementById('wsd'+i).className = 'wt-step-dot' + (i <= step ? ' act' : '');
+    document.getElementById('wsl'+i).className = 'wt-step-label' + (i <= step ? ' act' : '');
+  }
+  if (noAnimate || prevStep === step) {
+    ['wt-step1','wt-step2','wt-step3'].forEach((id,i) => {
+      const el = document.getElementById(id);
+      el.style.display = i === step ? 'block' : 'none';
+      el.style.animation = '';
+    });
+  } else {
+    const prevEl = document.getElementById('wt-step'+(prevStep+1));
+    prevEl.style.animation = 'stepOut 0.2s cubic-bezier(0.4,0,1,1) both';
+    setTimeout(() => {
+      ['wt-step1','wt-step2','wt-step3'].forEach((id,i) => {
+        const el = document.getElementById(id);
+        el.style.display = i === step ? 'block' : 'none';
+        el.style.animation = '';
+      });
+      document.getElementById('wt-step'+(step+1)).style.animation = 'stepIn 0.35s cubic-bezier(0.16,1,0.3,1) both';
+    }, 200);
+    startStepProgress(step);
   }
 }
 
@@ -656,7 +706,6 @@ function resetScreen(n) {
     document.getElementById('s2h').classList.remove('vis');
     const vp = document.getElementById('mapvp');
     vp.classList.remove('vis');
-    vp.style.transform = 'scale(1.08)'; vp.style.opacity = '0';
     ['pin1','pin2','pin3','pin4'].forEach(id => document.getElementById(id).classList.remove('pop'));
     ['dc1','dc2'].forEach(id => document.getElementById(id).classList.remove('vis'));
   }
@@ -665,7 +714,10 @@ function resetScreen(n) {
     document.getElementById('s3h').classList.remove('vis');
     document.getElementById('phonewt').classList.remove('vis');
     document.getElementById('wtsteps').classList.remove('vis');
-    setWtStep(0);
+    document.getElementById('s3feats').classList.remove('vis');
+    const prog = document.getElementById('wtprog');
+    if (prog) { prog.style.transition = 'none'; prog.style.width = '0%'; }
+    setWtStep(0, true);
   }
   if (n===4) {
     document.getElementById('s4h').classList.remove('vis');
