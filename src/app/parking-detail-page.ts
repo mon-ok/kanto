@@ -43,12 +43,12 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
   const location = spot.location || 'Metro Manila, Philippines';
 
   /* ── Image slides ── */
-  const slidesHtml = allImages.map((img: string) =>
-    `<div class="slide"><img src="${img}" alt="Parking space photo" /></div>`
+  const slidesHtml = allImages.map((img: string, idx: number) =>
+    `<div class="slide${idx === 0 ? ' active' : ''}"><img src="${img}" alt="Parking space photo" loading="lazy" /></div>`
   ).join('');
 
   const dotHtml = allImages.map((_: string, idx: number) =>
-    `<button class="dot${idx === 0 ? ' active' : ''}" onclick="goTo(${idx})" aria-label="Slide ${idx + 1}"></button>`
+    `<button class="dot${idx === 0 ? ' active' : ''}" data-idx="${idx}" onclick="event.stopPropagation(); goTo(${idx});" aria-label="Slide ${idx + 1}"></button>`
   ).join('');
 
   /* ── Amenity cards ── */
@@ -71,6 +71,7 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
 
   const supportedVehicles = spot.vehicles || Object.keys(spot.prices || {});
   const pricesObj = spot.prices || {};
+  const priceNum = pricesObj[selectedVehicle] ?? spot.priceNum ?? 0;
 
   const vehicleRatesHtml = supportedVehicles.map((vehicleId: string) => {
     const meta = VEHICLE_META[vehicleId] || { name: vehicleId, emoji: '🅿️' };
@@ -145,17 +146,18 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
     .close-btn:hover{background:rgba(242,146,33,.28);transform:translateX(-2px)}
     .topbar-name{font-size:16px;font-weight:900;color:#fff;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-    /* Gallery */
-    .gallery{position:relative;overflow:hidden;background:#1e293b;max-height:300px}
-    .slides-wrap{display:flex;transition:transform .42s cubic-bezier(.4,0,.2,1)}
-    .slide{min-width:100%;height:300px;overflow:hidden}
+    /* Gallery — fade carousel */
+    .gallery-outer{position:relative;background:#1e293b;height:300px;overflow:visible}
+    .gallery{position:relative;height:300px;overflow:hidden;background:#1e293b}
+    .slide{position:absolute;inset:0;opacity:0;transition:opacity .45s ease;pointer-events:none}
+    .slide.active{opacity:1;pointer-events:auto}
     .slide img{width:100%;height:100%;object-fit:cover;display:block}
-    .gallery-dots{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:5}
-    .dot{width:8px;height:8px;border-radius:50%;border:none;background:rgba(255,255,255,.4);cursor:pointer;transition:all .22s;padding:0;outline:none}
+    .gallery-dots{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:5;pointer-events:auto}
+    .dot{width:8px;height:8px;border-radius:50%;border:none;background:rgba(255,255,255,.4);cursor:pointer;transition:all .22s;padding:0;outline:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
     .dot.active{background:#fff;width:22px;border-radius:4px}
-    .gallery-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.38);border:none;color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center;z-index:5;transition:background .15s;outline:none;font-family:inherit}
-    .gallery-nav:hover{background:rgba(0,0,0,.65)}
-    .gallery-nav.prev{left:14px}.gallery-nav.next{right:14px}
+    .gallery-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.50);border:none;color:#fff;width:46px;height:46px;border-radius:50%;cursor:pointer;font-size:28px;line-height:1;display:flex;align-items:center;justify-content:center;z-index:20;transition:background .15s;outline:none;font-family:inherit;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+    .gallery-nav:active{background:rgba(0,0,0,.80);transform:translateY(-50%) scale(.92)}
+    .gallery-nav.prev{left:10px}.gallery-nav.next{right:10px}
 
     /* Page layout */
     .page{max-width:740px;margin:0 auto;padding:0 0 100px}
@@ -187,9 +189,9 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
     .bar-count{font-size:11px;font-weight:600;color:#94a3b8;width:18px;text-align:right}
 
     /* Book button */
-    .book-btn{display:block;width:calc(100% - 32px);margin:0 16px 16px;background:linear-gradient(135deg,#0a7c6e 0%,#12b0a0 100%);color:#fff;border:none;border-radius:18px;padding:18px 24px;font-size:16px;font-weight:900;cursor:pointer;text-align:center;box-shadow:0 8px 24px rgba(10,124,110,.38);transition:all .2s;letter-spacing:.3px;font-family:inherit}
-    .book-btn:hover{transform:translateY(-3px);box-shadow:0 14px 32px rgba(10,124,110,.48)}
-    .book-btn:active{transform:translateY(0);box-shadow:0 4px 12px rgba(10,124,110,.25)}
+    .book-btn{display:block;width:calc(100% - 32px);margin:0 16px 16px;background:#0a7c6e;color:#fff;border:none;border-radius:18px;padding:18px 24px;font-size:16px;font-weight:900;cursor:pointer;text-align:center;box-shadow:none;transition:all .2s;letter-spacing:.3px;font-family:inherit}
+    .book-btn:hover{transform:none;box-shadow:none}
+    .book-btn:active{transform:none;box-shadow:none}
 
     /* Section title */
     .section-title{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#263f4f;margin-bottom:16px}
@@ -508,30 +510,30 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
 
     /* Cancel Booking button style */
     .book-btn.booked {
-      background: linear-gradient(135deg,#dc2626 0%,#f43f5e 100%);
-      box-shadow: 0 8px 24px rgba(220,38,38,.38);
+      background: #dc2626;
+      box-shadow: none;
     }
     .book-btn.booked:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 14px 32px rgba(220,38,38,.48);
+      transform: none;
+      box-shadow: none;
     }
     .book-btn.booked:active {
-      transform: translateY(0);
-      box-shadow: 0 4px 12px rgba(220,38,38,.25);
+      transform: none;
+      box-shadow: none;
     }
 
     /* Request for Departure button style */
     .book-btn.departure {
-      background: linear-gradient(135deg,#0a7c6e 0%,#0f9f8c 100%);
-      box-shadow: 0 8px 24px rgba(10,124,110,.38);
+      background: #0a7c6e;
+      box-shadow: none;
     }
     .book-btn.departure:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 14px 32px rgba(10,124,110,.48);
+      transform: none;
+      box-shadow: none;
     }
     .book-btn.departure:active {
-      transform: translateY(0);
-      box-shadow: 0 4px 12px rgba(10,124,110,.25);
+      transform: none;
+      box-shadow: none;
     }
 
     /* Unavailable button style */
@@ -548,13 +550,16 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
 
   /* ── Inline JS ── */
   const js = `
-    var cur = 0, tot = ${allImages.length};
+    var cur = 0, tot = ${allImages.length}, slideEls, dotEls;
     function goTo(n) {
-      cur = n;
-      document.getElementById('sw').style.transform = 'translateX(-' + (n * 100) + '%)';
-      document.querySelectorAll('.dot').forEach(function(d, i) { d.classList.toggle('active', i === n); });
+      if (tot === 0) return;
+      cur = ((n % tot) + tot) % tot;
+      if (!slideEls) slideEls = document.querySelectorAll('.slide');
+      if (!dotEls)   dotEls   = document.querySelectorAll('.dot');
+      slideEls.forEach(function(s, i) { s.classList.toggle('active', i === cur); });
+      dotEls.forEach(function(d, i)   { d.classList.toggle('active', i === cur); });
     }
-    function shiftSlide(d) { goTo((cur + d + tot) % tot); }
+    function shiftSlide(d) { goTo(cur + d); }
     function filterReviews(stars, btn) {
       document.querySelectorAll('.filter-tab').forEach(function(t) { t.classList.remove('active'); });
       btn.classList.add('active');
@@ -578,11 +583,28 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
       document.body.classList.add('in-webview');
     }
 
+    function postMessageToParent(data) {
+      var payload = JSON.stringify(data);
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(payload);
+      } else {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(payload, '*');
+        }
+        if (window.opener) {
+          window.opener.postMessage(payload, '*');
+          if (window.opener.parent) {
+            window.opener.parent.postMessage(payload, '*');
+          }
+        }
+      }
+    }
+
     // Booking Flow State & Functions
     var isBooked = ${initiallyBooked ? 'true' : 'false'};
     var hasArrived = ${initiallyArrived ? 'true' : 'false'};
     var walletBalance = 150.00;
-    var reservationFee = ${spot.priceNum / 2};
+    var reservationFee = ${priceNum / 2};
 
     function updateWalletDisplay() {
       var reserveBalEl = document.getElementById('reserveWalletBalance');
@@ -595,24 +617,15 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
       if (isBooked) {
         if (hasArrived) {
           // Trigger departure request
-          if (window.ReactNativeWebView) {
-            window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'requestDeparture', spotId: '${spot.id}' }));
-          } else {
-            if (window.opener) {
-              window.opener.postMessage(JSON.stringify({ type: 'requestDeparture', spotId: '${spot.id}' }), '*');
-              if (window.opener.parent) {
-                window.opener.parent.postMessage(JSON.stringify({ type: 'requestDeparture', spotId: '${spot.id}' }), '*');
-              }
-            }
-          }
+          postMessageToParent({ type: 'requestDeparture', spotId: ${JSON.stringify(spot.id)} });
         } else {
           openModal('cancelModal');
         }
       } else {
         if (${spot.slots === 0}) {
-          if (window.ReactNativeWebView) {
-            window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'noSlotsError', spotName: '${spot.name}' }));
-          } else {
+          postMessageToParent({ type: 'noSlotsError', spotName: ${JSON.stringify(spot.name)} });
+          // Fallback if not inside iframe/webview
+          if (!window.ReactNativeWebView && (!window.parent || window.parent === window) && !window.opener) {
             openModal('noSlotsModal');
           }
           return;
@@ -663,15 +676,8 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
       finalizeBooking();
       
       // Send message to close native Modal and trigger centering on map
-      if (window.ReactNativeWebView) {
-        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'viewDirections', spotId: '${spot.id}' }));
-      } else {
-        if (window.opener) {
-          window.opener.postMessage(JSON.stringify({ type: 'viewDirections', spotId: '${spot.id}' }), '*');
-          if (window.opener.parent) {
-            window.opener.parent.postMessage(JSON.stringify({ type: 'viewDirections', spotId: '${spot.id}' }), '*');
-          }
-        }
+      postMessageToParent({ type: 'viewDirections', spotId: ${JSON.stringify(spot.id)} });
+      if (!window.ReactNativeWebView && (!window.parent || window.parent === window) && window.close) {
         window.close();
       }
     }
@@ -695,16 +701,7 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
       showNotificationToast('Reservation cancelled. Reservation fee is non-refundable.');
 
       // Synchronize back to parent
-      if (window.ReactNativeWebView) {
-        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'cancelBooking', spotId: '${spot.id}' }));
-      } else {
-        if (window.opener) {
-          window.opener.postMessage(JSON.stringify({ type: 'cancelBooking', spotId: '${spot.id}' }), '*');
-          if (window.opener.parent) {
-            window.opener.parent.postMessage(JSON.stringify({ type: 'cancelBooking', spotId: '${spot.id}' }), '*');
-          }
-        }
-      }
+      postMessageToParent({ type: 'cancelBooking', spotId: ${JSON.stringify(spot.id)} });
     }
 
     function showNotificationToast(msg) {
@@ -743,7 +740,17 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
       }, 2500);
     }
 
-    window.addEventListener('DOMContentLoaded', function() {
+    // Script is at end of <body> — DOM is already parsed, attach all listeners immediately
+    (function initCarousel() {
+      slideEls = document.querySelectorAll('.slide');
+      dotEls   = document.querySelectorAll('.dot');
+      // Make sure the first slide is visible
+      if (slideEls.length > 0 && !slideEls[0].classList.contains('active')) {
+        slideEls[0].classList.add('active');
+      }
+    })();
+    // Book button state on load
+    (function initBookState() {
       if (isBooked) {
         var btn = document.getElementById('mainBookBtn');
         if (btn) {
@@ -756,7 +763,7 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
           }
         }
       }
-    });
+    })();
   `;
 
   let bookBtnText = '&#128336;&nbsp;&nbsp;Book a Slot Now';
@@ -786,12 +793,14 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
 </head>
 <body>
   <div class="page">
-    <!-- Gallery -->
-    <div class="gallery">
-      <button class="gallery-nav prev" onclick="shiftSlide(-1)">&#8249;</button>
-      <div class="slides-wrap" id="sw">${slidesHtml}</div>
-      <button class="gallery-nav next" onclick="shiftSlide(1)">&#8250;</button>
-      <div class="gallery-dots">${dotHtml}</div>
+    <!-- Gallery: nav buttons are on gallery-OUTER (overflow:visible) to avoid Android WebView touch-clip bug -->
+    <div class="gallery-outer">
+      <div class="gallery">
+        ${slidesHtml}
+        <div class="gallery-dots">${dotHtml}</div>
+      </div>
+      <button class="gallery-nav prev" id="galleryPrev" onclick="event.stopPropagation(); shiftSlide(-1);" aria-label="Previous image">&#8249;</button>
+      <button class="gallery-nav next" id="galleryNext" onclick="event.stopPropagation(); shiftSlide(1);" aria-label="Next image">&#8250;</button>
     </div>
 
     <!-- Info card -->
@@ -868,11 +877,11 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
         </div>
         <div class="summary-row">
           <span>Reservation Fee (30 mins):</span>
-          <span class="val">&#8369;${(spot.priceNum / 2).toFixed(2)}</span>
+          <span class="val">&#8369;${(priceNum / 2).toFixed(2)}</span>
         </div>
         <div class="summary-row" style="margin-top: 4px; border-top: 1px dashed #cbd5e1; padding-top: 4px;">
           <span>Remaining Wallet Balance:</span>
-          <span class="val" id="reserveRemainingBalance">&#8369;${(150 - spot.priceNum / 2).toFixed(2)}</span>
+          <span class="val" id="reserveRemainingBalance">&#8369;${(150 - priceNum / 2).toFixed(2)}</span>
         </div>
         <div class="summary-row" style="margin-top: 4px; padding-top: 4px;">
           <span>Arrival Time Limit:</span>
@@ -907,11 +916,11 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
         </div>
         <div class="summary-row">
           <span>Reservation Cost:</span>
-          <span class="val">&#8369;${(spot.priceNum / 2).toFixed(2)}</span>
+          <span class="val">&#8369;${(priceNum / 2).toFixed(2)}</span>
         </div>
         <div class="summary-row">
           <span>New Wallet Balance:</span>
-          <span class="val" id="successWalletBalance">&#8369;${(150 - spot.priceNum / 2).toFixed(2)}</span>
+          <span class="val" id="successWalletBalance">&#8369;${(150 - priceNum / 2).toFixed(2)}</span>
         </div>
         <div class="summary-row" style="margin-top: 4px; border-top: 1px dashed #cbd5e1; padding-top: 4px;">
           <span>Arrival Policy:</span>
@@ -956,3 +965,7 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
 </body>
 </html>`;
 }
+
+/** Required by Expo Router — this file is in src/app/ but is a utility, not a screen */
+// eslint-disable-next-line import/no-default-export
+export default function ParkingDetailPageRoute() { return null as any; }

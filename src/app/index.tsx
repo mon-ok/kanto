@@ -19,7 +19,8 @@ import {
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  View
+  View,
+  Image as RNImage
 } from 'react-native';
 
 // Safely require react-native-webview on native platforms only
@@ -449,20 +450,16 @@ const LEAFLET_HTML = `
 
 
     function handleViewMore(spotId) {
-      if (window.ReactNativeWebView) {
-        // Native: postMessage for Alert fallback
-        var spot = null;
-        for (var i = 0; i < activeMarkers.length; i++) {
-          if (activeMarkers[i].spotId === spotId) { spot = activeMarkers[i].spotData; break; }
-        }
-        if (spot) window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'viewMore', spot: spot }));
-        return;
+      var spot = null;
+      for (var i = 0; i < activeMarkers.length; i++) {
+        if (activeMarkers[i].spotId === spotId) { spot = activeMarkers[i].spotData; break; }
       }
-      // Web: open the prebuilt Blob URL from parent window directly (user-gesture context)
-      var urls = window.parent && window.parent.__kantoDetailUrls;
-      var url = urls && urls[spotId];
-      if (url) {
-        window.open(url, '_blank');
+      if (!spot) return;
+      var payload = JSON.stringify({ type: 'viewMore', spot: spot });
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(payload);
+      } else {
+        window.parent.postMessage(payload, '*');
       }
     }
 
@@ -530,6 +527,51 @@ const VEHICLES = [
   { id: 'jeepney', name: 'Jeepney', emoji: '🚌', image: require('@/assets/images/vehicles/jeepney.png') },
   { id: 'truck', name: 'Truck', emoji: '🚚', image: require('@/assets/images/vehicles/truck.png') },
 ];
+
+const PARKING_IMAGES = [
+  require('@/assets/images/parking/ps1.jpg'),
+  require('@/assets/images/parking/ps2.jpg'),
+  require('@/assets/images/parking/ps3.jpg'),
+  require('@/assets/images/parking/ps4.jpg'),
+  require('@/assets/images/parking/ps5.jpg'),
+  require('@/assets/images/parking/ps6.jpg'),
+  require('@/assets/images/parking/ps7.jpg'),
+  require('@/assets/images/parking/ps8.jpg'),
+  require('@/assets/images/parking/ps9.jpg'),
+  require('@/assets/images/parking/ps10.jpg'),
+];
+
+const REMOTE_FALLBACK_IMAGES = [
+  'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=800&q=80',
+  'https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=800&q=80',
+  'https://images.unsplash.com/photo-1573804630927-ea5a09a5bae4?w=800&q=80',
+  'https://images.unsplash.com/photo-1555626906-fcf10d6851b4?w=800&q=80',
+  'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=800&q=80',
+];
+
+function getRandomParkingImages(): string[] {
+  try {
+    const uris = PARKING_IMAGES.map((img) => RNImage.resolveAssetSource(img)?.uri).filter(Boolean) as string[];
+    const sourcePool = uris.length > 0 ? uris : REMOTE_FALLBACK_IMAGES;
+    
+    // Pick 6 random images from the pool (with replacement / repeatedly allowed)
+    const selected: string[] = [];
+    for (let i = 0; i < 6; i++) {
+      const idx = Math.floor(Math.random() * sourcePool.length);
+      selected.push(sourcePool[idx]);
+    }
+    return selected;
+  } catch (e) {
+    console.warn('Failed to resolve local parking images:', e);
+    // Return 6 random fallback images
+    const selected: string[] = [];
+    for (let i = 0; i < 6; i++) {
+      const idx = Math.floor(Math.random() * REMOTE_FALLBACK_IMAGES.length);
+      selected.push(REMOTE_FALLBACK_IMAGES[idx]);
+    }
+    return selected;
+  }
+}
 
 const BASE_PARKING_SPACES = [
   {
@@ -942,15 +984,7 @@ export default function MapScreen() {
   const openParkingDetails = (spot: any) => {
     const isBooked = spot.id === bookedSpotId;
     const detailHtml = buildParkingDetailPage(spot, isBooked, hasArrived, selectedVehicle);
-    if (Platform.OS === 'web') {
-      const newTab = window.open('', '_blank');
-      if (newTab) {
-        newTab.document.write(detailHtml);
-        newTab.document.close();
-      }
-    } else {
-      setViewMoreHtml(detailHtml);
-    }
+    setViewMoreHtml(detailHtml);
   };
 
   const webviewRef = useRef<any>(null);
@@ -1069,6 +1103,15 @@ export default function MapScreen() {
   };
 
   useEffect(() => {
+    // Assign 6 random resolved local images to each parking spot on mount
+    BASE_PARKING_SPACES.forEach((spot) => {
+      const randomImages = getRandomParkingImages();
+      if (randomImages.length > 0) {
+        (spot as any).images = randomImages;
+        spot.image = randomImages[0];
+      }
+    });
+
     requestLocation();
 
     let subscription: any = null;
@@ -1263,16 +1306,6 @@ export default function MapScreen() {
   const sendMarkersToMap = (markers: any[]) => {
     const message = JSON.stringify({ type: 'setMarkers', markers });
     if (Platform.OS === 'web') {
-      // Precompute detail pages as Blob URLs stored on parent window (reliable new-tab open)
-      const prevUrls: Record<string, string> = (window as any).__kantoDetailUrls || {};
-      Object.values(prevUrls).forEach((u: any) => { try { URL.revokeObjectURL(u); } catch (_) { } });
-      const urls: Record<string, string> = {};
-      markers.forEach((spot: any) => {
-        const html = buildParkingDetailPage(spot, spot.id === bookedSpotId, hasArrived, selectedVehicle);
-        const blob = new Blob([html], { type: 'text/html' });
-        urls[spot.id] = URL.createObjectURL(blob);
-      });
-      (window as any).__kantoDetailUrls = urls;
       if (iframeRef.current && iframeRef.current.contentWindow) {
         iframeRef.current.contentWindow.postMessage(message, '*');
       }
@@ -1351,6 +1384,7 @@ export default function MapScreen() {
         vehicles: spot.vehicles,
         prices: spot.prices,
         image: spot.image,
+        images: (spot as any).images,
         description: spot.description,
         location: 'Metro Manila, Philippines',
         rating: spot.rating || 4.5,
@@ -1423,6 +1457,7 @@ export default function MapScreen() {
         if (data && data.type === 'viewMore' && data.spot) {
           openParkingDetails(data.spot);
         } else if (data && data.type === 'viewDirections') {
+          setViewMoreHtml(null); // Close the detail Modal
           if (data.spotId) {
             const spot = BASE_PARKING_SPACES.find(s => s.id === data.spotId);
             if (spot) {
@@ -1445,10 +1480,13 @@ export default function MapScreen() {
             }
           }
         } else if (data && data.type === 'cancelBooking') {
+          setViewMoreHtml(null); // Close modal if open
           handleCancelBooking(false);
         } else if (data && data.type === 'requestDeparture') {
+          setViewMoreHtml(null); // Close modal if open
           handleRequestDeparturePress();
         } else if (data && data.type === 'noSlotsError') {
+          setViewMoreHtml(null); // Close modal if open
           setNoSlotsSpotName(data.spotName || '');
           setActiveModal('no_slots');
         }
@@ -1458,7 +1496,7 @@ export default function MapScreen() {
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [bookedSpotId, hasArrived, selectedVehicle]);
+  }, [bookedSpotId, hasArrived, selectedVehicle, coords]);
 
   // Handle messages from native WebView
   const handleNativeMessage = (event: any) => {
@@ -1626,7 +1664,7 @@ export default function MapScreen() {
             ) : (
               <View style={styles.sheetHeader}>
                 <View style={styles.headerRow}>
-                  <Text style={styles.headerTitle}>Hi! Anong gusto mong i-park?</Text>
+                  <Text style={styles.headerTitle}>Hi! Ano'ng gusto mong i-park?</Text>
                   <TouchableOpacity onPress={() => toggleSheet(false)} style={styles.closeButton}>
                     <Text style={styles.closeButtonText}>✕</Text>
                   </TouchableOpacity>
@@ -1800,8 +1838,8 @@ export default function MapScreen() {
           </ScrollView>
         </Animated.View>
       </View>
-      {/* Full-screen parking detail modal (native) */}
-      {Platform.OS !== 'web' && viewMoreHtml !== null && WebView && (
+      {/* Full-screen parking detail modal */}
+      {viewMoreHtml !== null && (Platform.OS === 'web' || WebView) && (
         <Modal
           visible={true}
           animationType="slide"
@@ -1811,7 +1849,8 @@ export default function MapScreen() {
           <View style={{ flex: 1, backgroundColor: '#263f4f' }}>
             <View style={{
               flexDirection: 'row', alignItems: 'center',
-              paddingTop: 52, paddingBottom: 12,
+              paddingTop: Platform.OS === 'ios' ? 52 : Platform.OS === 'android' ? 44 : 16,
+              paddingBottom: 12,
               paddingHorizontal: 16,
               backgroundColor: '#263f4f',
             }}>
@@ -1831,14 +1870,27 @@ export default function MapScreen() {
                 Parking Details
               </Text>
             </View>
-            <WebView
-              source={{ html: viewMoreHtml }}
-              style={{ flex: 1, backgroundColor: '#f1f5f9' }}
-              javaScriptEnabled={true}
-              domStorageEnabled={true}
-              originWhitelist={['*']}
-              onMessage={handleNativeMessage}
-            />
+            {Platform.OS === 'web' ? (
+              <iframe
+                srcDoc={viewMoreHtml}
+                sandbox="allow-scripts allow-forms allow-modals allow-popups"
+                style={styles.iframe as any}
+              />
+            ) : (
+              WebView && (
+                <WebView
+                  source={{ html: viewMoreHtml }}
+                  style={{ flex: 1, backgroundColor: '#f1f5f9' }}
+                  javaScriptEnabled={true}
+                  domStorageEnabled={true}
+                  originWhitelist={['*']}
+                  onMessage={handleNativeMessage}
+                  mixedContentMode="always"
+                  allowFileAccess={true}
+                  allowUniversalAccessFromFileURLs={true}
+                />
+              )
+            )}
           </View>
         </Modal>
       )}
