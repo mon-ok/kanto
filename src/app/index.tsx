@@ -3611,11 +3611,7 @@ export default function MapScreen() {
 
       {/* Custom Modal overlay system */}
       {activeModal !== null && (
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalOverlay}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-        >
+        <View style={styles.modalOverlayContainer}>
           <TouchableWithoutFeedback onPress={() => {
             if (activeModal === 'confirm_book' || activeModal === 'cancel_confirm' || activeModal === 'filter') {
               setActiveModal(null);
@@ -3624,7 +3620,12 @@ export default function MapScreen() {
             <View style={styles.modalOverlayBackground} />
           </TouchableWithoutFeedback>
 
-          <View style={styles.modalCard}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.modalKeyboardAvoiding}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+          >
+            <View style={styles.modalCard}>
             {activeModal === 'confirm_book' && modalTargetSpace && (
               <View>
                 <View style={styles.modalHeader}>
@@ -3937,14 +3938,7 @@ export default function MapScreen() {
                 <Text style={[styles.modalDesc, { textAlign: 'center' }]}>
                   Thank you for rating <Text style={styles.boldText}>{bookedSpot?.name || 'this space'}</Text> {ratingStars} stars!
                 </Text>
-                {ratingComment.trim().length > 0 && (
-                  <View style={[styles.bookingSummaryBox, { width: '100%', marginTop: Spacing.two, marginBottom: Spacing.one, padding: Spacing.two }]}>
-                    <Text style={[styles.summaryLabel, { marginBottom: 4 }]}>Your comment:</Text>
-                    <Text style={[styles.summaryVal, { fontWeight: '500', color: '#475569', textAlign: 'left' }]} numberOfLines={3}>
-                      "{ratingComment.trim()}"
-                    </Text>
-                  </View>
-                )}
+
                 <TouchableOpacity
                   style={[styles.modalPrimaryBtn, { width: '100%', marginTop: Spacing.three }]}
                   onPress={handleDepartureComplete}
@@ -4178,8 +4172,9 @@ export default function MapScreen() {
                 </View>
               </View>
             )}
-          </View>
-        </KeyboardAvoidingView>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
       )}
     </SafeAreaView>
   );
@@ -4663,16 +4658,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '900',
   },
-  modalOverlay: {
+  modalOverlayContainer: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(38, 63, 79, 0.65)',
-    justifyContent: 'center',
-    alignItems: 'center',
     zIndex: 100,
-    padding: Spacing.four,
   },
   modalOverlayBackground: {
     ...StyleSheet.absoluteFillObject,
+  },
+  modalKeyboardAvoiding: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.four,
   },
   modalCard: {
     width: '100%',
