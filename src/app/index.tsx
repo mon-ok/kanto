@@ -304,9 +304,9 @@ const LEAFLET_HTML = `
 <body>
   <div id="map"></div>
   <script>
-    // Manila, PH default coordinates
-    var defaultLat = 14.5995;
-    var defaultLng = 120.9842;
+    // Lahug, Cebu City, PH default coordinates
+    var defaultLat = 10.3314;
+    var defaultLng = 123.9017;
     var map = L.map('map', {
       zoomControl: false
     }).setView([defaultLat, defaultLng], 13);
@@ -594,6 +594,7 @@ const BASE_PARKING_SPACES = [
     slots: 4,
     rating: 4.8,
     reviewCount: 12,
+    location: 'Salinas Drive, Lahug, Cebu City',
     description: 'Malawak at sementadong bakuran sa likod ng bahay ni Mang Juan. Safe, may gate, at malapit sa palengke. Bantay-sarado ng pamilya.',
     amenities: ['Gated Property', 'CCTV Monitoring', 'Lighting', 'Attendant (Mang Juan)', 'Cement Pavement'],
     image: 'https://images.unsplash.com/photo-1506521788723-8681148e22db?w=600&auto=format&fit=crop&q=60',
@@ -615,6 +616,7 @@ const BASE_PARKING_SPACES = [
     slots: 0,
     rating: 4.6,
     reviewCount: 9,
+    location: 'Gorordo Avenue, Lahug, Cebu City',
     description: 'Safe at saradong garahe sa tapat ng bahay ni Aling Nena. Protektado ang sasakyan mo sa init at ulan. Kasya ang SUV o Sedan.',
     amenities: ['Covered Roof', 'Gated Property', 'CCTV Monitoring', 'Flood-free'],
     image: 'https://images.unsplash.com/photo-1573348722427-f1d6819fdf98?w=600&auto=format&fit=crop&q=60',
@@ -636,6 +638,7 @@ const BASE_PARKING_SPACES = [
     slots: 2,
     rating: 4.2,
     reviewCount: 8,
+    location: 'Nivel Hills, Lahug, Cebu City',
     description: 'Driveway na may bubong sa isang secure na subdivision. Bantay-sarado ng mga aso ni Tito Boy (very friendly) at may village guards.',
     amenities: ['Covered Roof', 'Subdivision Security', 'Lighting', 'Pet Friendly'],
     image: 'https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=600&auto=format&fit=crop&q=60',
@@ -657,6 +660,7 @@ const BASE_PARKING_SPACES = [
     slots: 3,
     rating: 4.5,
     reviewCount: 15,
+    location: 'Cebu IT Park, Lahug, Cebu City',
     description: 'Pinasementuhang space sa tapat ng bahay at sari-sari store ni Kuya Jojo. Madaling parkingan at laging may tao sa tapat.',
     amenities: ['CCTV Monitoring', 'Lighting', 'Near Sari-Sari Store', 'Cement Pavement'],
     image: 'https://images.unsplash.com/photo-1621905252507-b354bc25edac?w=600&auto=format&fit=crop&q=60',
@@ -678,6 +682,7 @@ const BASE_PARKING_SPACES = [
     slots: 2,
     rating: 4.9,
     reviewCount: 20,
+    location: 'JY Square Vicinity, Lahug, Cebu City',
     description: 'Malilim at sementadong driveway ni Ate Sarah. 2 minutes walk lang mula sa parokya/simbahan. Perfect tuwing Linggo.',
     amenities: ['Covered Roof', 'CCTV Monitoring', 'Gated Property', 'Near Church'],
     image: 'https://images.unsplash.com/photo-1545259742-b4fd8fea67e4?w=600&auto=format&fit=crop&q=60',
@@ -699,6 +704,7 @@ const BASE_PARKING_SPACES = [
     slots: 0,
     rating: 4.0,
     reviewCount: 7,
+    location: 'Sudlon, Lahug, Cebu City',
     description: 'Bakanteng lote sa tapat mismo ng Barangay Hall. Binabantayan ng mga barangay tanod kaya sigurado kang panatag ang loob mo.',
     amenities: ['Barangay Tanod Patrol', 'Lighting', 'Spacious Area'],
     image: 'https://images.unsplash.com/photo-1508962914676-134849a727f0?w=600&auto=format&fit=crop&q=60',
@@ -720,6 +726,7 @@ const BASE_PARKING_SPACES = [
     slots: 2,
     rating: 4.3,
     reviewCount: 6,
+    location: 'La Guardia, Lahug, Cebu City',
     description: 'Malilim na garahe ni Lola Flor na may canopy sa harap. Laging may tao sa bahay kaya ligtas ang motor o trike mo.',
     amenities: ['Covered Roof', 'Attendant (Lola Flor)', 'Lighting'],
     image: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=600&auto=format&fit=crop&q=60',
@@ -741,6 +748,7 @@ const BASE_PARKING_SPACES = [
     slots: 4,
     rating: 4.7,
     reviewCount: 11,
+    location: 'Beverly Hills, Lahug, Cebu City',
     description: 'Malawak na lupain ni Kuya Cardo na kasya ang jeepney, delivery truck, o cargo vehicle. May sliding gate at CCTV.',
     amenities: ['Covered Roof', 'CCTV Monitoring', 'Truck Friendly', 'Gated Property'],
     image: 'https://images.unsplash.com/photo-1520038410233-7141be7e6f97?w=600&auto=format&fit=crop&q=60',
@@ -762,6 +770,7 @@ const BASE_PARKING_SPACES = [
     slots: 3,
     rating: 4.4,
     reviewCount: 5,
+    location: 'Geonzon St, Cebu IT Park, Lahug, Cebu City',
     description: 'Sementadong gilid ng duplex house ni Ninong Bobby. Tahimik na eskinita, may gate, at babantayan din ng pamilya niya.',
     amenities: ['Gated Property', 'Lighting', 'Cement Pavement', 'Quiet Area'],
     image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=600&auto=format&fit=crop&q=60',
@@ -783,6 +792,7 @@ const BASE_PARKING_SPACES = [
     slots: 3,
     rating: 4.5,
     reviewCount: 10,
+    location: 'Salinas Drive (Near USPF), Lahug, Cebu City',
     description: 'Covered carport sa tabi ng residential compound ni Ate Grace. May malaking bubong at safety steel sliding gate.',
     amenities: ['Covered Roof', '24/7 Security', 'Steel sliding gate', 'Lighting'],
     image: 'https://images.unsplash.com/photo-1506521788723-8681148e22db?w=600&auto=format&fit=crop&q=60',
@@ -1732,8 +1742,8 @@ export default function MapScreen() {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        setErrorMsg('Location permission was denied. Defaulting to Manila.');
-        const fallback = { latitude: 14.5995, longitude: 120.9842 };
+        setErrorMsg('Location permission was denied. Defaulting to Lahug, Cebu City.');
+        const fallback = { latitude: 10.3314, longitude: 123.9017 };
         setCoords(fallback);
         setLoading(false);
         return fallback;
@@ -1750,8 +1760,8 @@ export default function MapScreen() {
       setErrorMsg(null);
       return current;
     } catch (e) {
-      setErrorMsg('Error fetching location. Defaulting to Manila.');
-      const fallback = { latitude: 14.5995, longitude: 120.9842 };
+      setErrorMsg('Error fetching location. Defaulting to Lahug, Cebu City.');
+      const fallback = { latitude: 10.3314, longitude: 123.9017 };
       setCoords(fallback);
       return fallback;
     } finally {
@@ -2043,7 +2053,7 @@ export default function MapScreen() {
         image: spot.image,
         images: (spot as any).images,
         description: spot.description,
-        location: 'Metro Manila, Philippines',
+        location: spot.location || 'Lahug, Cebu City, Philippines',
         rating: spot.rating || 4.5,
         reviewCount: spot.reviewCount || 3,
       }));

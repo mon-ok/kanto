@@ -40,7 +40,7 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
     : [spot.image, ...FALLBACK_IMAGES].filter(Boolean);
   const ratingNum = (spot.rating || 4.5).toFixed(1);
   const reviewCount = SAMPLE_REVIEWS.length;
-  const location = spot.location || 'Metro Manila, Philippines';
+  const location = spot.location || 'Lahug, Cebu City, Philippines';
 
   /* ── Image slides ── */
   const slidesHtml = allImages.map((img: string, idx: number) =>
@@ -82,6 +82,9 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
         <span class="rate-name">${meta.name}</span>
       </div>
       <div class="rate-val">&#8369;${price}/hr</div>
+      <div class="rate-slots" style="font-size: 11px; font-weight: 700; color: ${spot.slots > 0 ? '#0a7c6e' : '#dc2626'}; margin-top: 4px;">
+        &#9679;&nbsp;${spot.slots > 0 ? `${spot.slots} slots` : 'Full'}
+      </div>
     </div>`;
   }).join('');
 
