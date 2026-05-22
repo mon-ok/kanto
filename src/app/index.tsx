@@ -1177,36 +1177,68 @@ function TransactionsIcon({ tintColor, size }: { tintColor: string; size: number
 
 // A custom fallback settings/cog icon for Android/Web where SF Symbols are not available
 function SettingsIcon({ tintColor, size }: { tintColor: string; size: number }) {
-  const outerSize = size * 0.65;
-  const innerSize = size * 0.22;
-  const tickThick = 2.5;
-  const tickLen = size * 0.18;
+  const rimSize = size * 0.55;
+  const holeSize = size * 0.22;
+  const toothWidth = size * 0.12;
+  const toothHeight = size * 0.15;
+  const toothDistance = size * 0.3;
+  const borderThick = 2.5;
+
+  const teethAngles = [0, 45, 90, 135, 180, 225, 270, 315];
+
   return (
     <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+      {/* Teeth */}
+      {teethAngles.map((angle) => {
+        const angleRad = (angle * Math.PI) / 180;
+        const dx = toothDistance * Math.sin(angleRad);
+        const dy = -toothDistance * Math.cos(angleRad);
+        const left = size / 2 + dx - toothWidth / 2;
+        const top = size / 2 + dy - toothHeight / 2;
+
+        return (
+          <View
+            key={angle}
+            style={{
+              position: 'absolute',
+              left,
+              top,
+              width: toothWidth,
+              height: toothHeight,
+              backgroundColor: tintColor,
+              borderRadius: 1,
+              transform: [{ rotate: `${angle}deg` }],
+            }}
+          />
+        );
+      })}
+
+      {/* Outer Rim */}
       <View
         style={{
-          width: outerSize,
-          height: outerSize,
-          borderRadius: outerSize / 2,
-          borderWidth: 2.5,
+          position: 'absolute',
+          width: rimSize,
+          height: rimSize,
+          borderRadius: rimSize / 2,
+          borderWidth: borderThick,
           borderColor: tintColor,
+          backgroundColor: 'transparent',
           justifyContent: 'center',
           alignItems: 'center',
         }}
       >
+        {/* Inner Axle Hole */}
         <View
           style={{
-            width: innerSize,
-            height: innerSize,
-            borderRadius: innerSize / 2,
-            backgroundColor: tintColor,
+            width: holeSize,
+            height: holeSize,
+            borderRadius: holeSize / 2,
+            borderWidth: borderThick - 0.5,
+            borderColor: tintColor,
+            backgroundColor: 'transparent',
           }}
         />
       </View>
-      <View style={{ position: 'absolute', top: 0, width: tickThick, height: tickLen, backgroundColor: tintColor, borderRadius: tickThick / 2 }} />
-      <View style={{ position: 'absolute', bottom: 0, width: tickThick, height: tickLen, backgroundColor: tintColor, borderRadius: tickThick / 2 }} />
-      <View style={{ position: 'absolute', left: 0, width: tickLen, height: tickThick, backgroundColor: tintColor, borderRadius: tickThick / 2 }} />
-      <View style={{ position: 'absolute', right: 0, width: tickLen, height: tickThick, backgroundColor: tintColor, borderRadius: tickThick / 2 }} />
     </View>
   );
 }
@@ -1286,6 +1318,102 @@ function LogoutIcon({ tintColor, size }: { tintColor: string; size: number }) {
     </View>
   );
 }
+
+// A custom fallback credit card icon for Android/Web where SF Symbols are not available
+function CreditCardIcon({ tintColor, size }: { tintColor: string; size: number }) {
+  const borderThick = 2.5;
+  const width = size * 0.85;
+  const height = size * 0.55;
+  return (
+    <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
+      <View
+        style={{
+          width,
+          height,
+          borderRadius: 6,
+          borderWidth: borderThick,
+          borderColor: tintColor,
+          position: 'relative',
+          overflow: 'hidden',
+          paddingTop: height * 0.15,
+        }}
+      >
+        {/* Stripe */}
+        <View
+          style={{
+            height: height * 0.22,
+            backgroundColor: tintColor,
+            width: '100%',
+          }}
+        />
+        {/* Chip */}
+        <View
+          style={{
+            position: 'absolute',
+            left: 5,
+            bottom: 5,
+            width: width * 0.22,
+            height: height * 0.22,
+            borderRadius: 2,
+            backgroundColor: tintColor,
+            opacity: 0.8,
+          }}
+        />
+      </View>
+    </View>
+  );
+}
+
+// A custom fallback plus icon for Android/Web where SF Symbols are not available
+function PlusIcon({ tintColor, size }: { tintColor: string; size: number }) {
+  const thickness = 2.5;
+  return (
+    <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+      {/* Horizontal line */}
+      <View style={{ width: size * 0.65, height: thickness, backgroundColor: tintColor, borderRadius: thickness / 2, position: 'absolute' }} />
+      {/* Vertical line */}
+      <View style={{ width: thickness, height: size * 0.65, backgroundColor: tintColor, borderRadius: thickness / 2, position: 'absolute' }} />
+    </View>
+  );
+}
+
+// A custom fallback withdraw/arrow-up icon for Android/Web where SF Symbols are not available
+function WithdrawIcon({ tintColor, size }: { tintColor: string; size: number }) {
+  const thickness = 2.5;
+  return (
+    <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+      {/* Up Shaft */}
+      <View style={{ width: thickness, height: size * 0.65, backgroundColor: tintColor, borderRadius: thickness / 2, position: 'absolute' }} />
+      {/* Left Arrow Head Line */}
+      <View
+        style={{
+          width: size * 0.3,
+          height: thickness,
+          backgroundColor: tintColor,
+          borderRadius: thickness / 2,
+          position: 'absolute',
+          top: size * 0.22,
+          left: size * 0.24,
+          transform: [{ rotate: '45deg' }],
+        }}
+      />
+      {/* Right Arrow Head Line */}
+      <View
+        style={{
+          width: size * 0.3,
+          height: thickness,
+          backgroundColor: tintColor,
+          borderRadius: thickness / 2,
+          position: 'absolute',
+          top: size * 0.22,
+          right: size * 0.24,
+          transform: [{ rotate: '-45deg' }],
+        }}
+      />
+    </View>
+  );
+}
+
 
 
 function getDistanceInMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -2428,9 +2556,20 @@ export default function MapScreen() {
       <View>
         {/* Wallet Balance Card */}
         <View style={styles.walletBalanceCard}>
-          <Text style={styles.walletBalanceLabel}>Available Wallet Balance</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <Text style={[styles.walletBalanceLabel, { marginBottom: 0 }]}>Available Wallet Balance</Text>
+            <SymbolView
+              name={{ ios: 'creditcard', android: 'payment', web: 'payment' } as any}
+              size={30}
+              tintColor="rgba(255, 255, 255, 0.35)"
+              fallback={
+                <View style={{ opacity: 0.35 }}>
+                  <CreditCardIcon tintColor="#ffffff" size={30} />
+                </View>
+              }
+            />
+          </View>
           <Text style={styles.walletBalanceVal}>₱{walletBalance.toFixed(2)}</Text>
-          <Text style={{ position: 'absolute', right: 20, top: 20, fontSize: 36, opacity: 0.15 }}>💳</Text>
         </View>
 
         {/* Action Buttons */}
@@ -2442,7 +2581,10 @@ export default function MapScreen() {
               setWalletPhone(userProfile.phone.replace(/[^0-9]/g, ''));
             }}
           >
-            <Text style={[styles.walletBtnText, { color: '#ffffff' }]}>➕ Add Money</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <PlusIcon tintColor="#ffffff" size={16} />
+              <Text style={[styles.walletBtnText, { color: '#ffffff' }]}>Add Money</Text>
+            </View>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.walletBtn, styles.walletWithdrawBtn]}
@@ -2451,7 +2593,10 @@ export default function MapScreen() {
               setWalletPhone(userProfile.phone.replace(/[^0-9]/g, ''));
             }}
           >
-            <Text style={[styles.walletBtnText, { color: '#263f4f' }]}>📤 Withdraw</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <WithdrawIcon tintColor="#263f4f" size={16} />
+              <Text style={[styles.walletBtnText, { color: '#263f4f' }]}>Withdraw</Text>
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -2471,8 +2616,8 @@ export default function MapScreen() {
                 <View style={styles.txIconContainer}>
                   <Text style={{ fontSize: 18 }}>{isTopUp ? '📥' : '📤'}</Text>
                 </View>
-                <View>
-                  <Text style={styles.txTitle}>{tx.title}</Text>
+                <View style={{ flex: 1, paddingRight: 8 }}>
+                  <Text style={styles.txTitle} numberOfLines={2}>{tx.title}</Text>
                   <Text style={styles.txDate}>{tx.date}</Text>
                 </View>
               </View>
@@ -2922,7 +3067,7 @@ export default function MapScreen() {
             <Text style={styles.tabScreenHeaderBackText}>Back</Text>
           </TouchableOpacity>
           <Text style={styles.tabScreenHeaderTitle}>{title}</Text>
-          <View style={{ width: 60 }} /> {/* balance back button */}
+          <View style={{ width: 60 }} />
         </View>
 
         {/* Tab Content Body */}
@@ -2935,7 +3080,7 @@ export default function MapScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={[styles.mapContainer, activeTab !== 'map' && { display: 'none' }]}>
+      <View style={[styles.mapContainer, activeTab !== 'map' ? { display: 'none' } : undefined]}>
         {Platform.OS === 'web' ? (
           <iframe
             ref={iframeRef}
@@ -3074,58 +3219,70 @@ export default function MapScreen() {
 
                 {/* Drawer Items */}
                 <View style={styles.sidebarMenu}>
-                  <TouchableOpacity style={styles.sidebarItem} onPress={() => { toggleSidebar(false); setActiveTab('account'); }}>
+                  <TouchableOpacity
+                    style={[styles.sidebarItem, activeTab === 'account' && styles.activeSidebarItem]}
+                    onPress={() => { toggleSidebar(false); setActiveTab('account'); }}
+                  >
                     <View style={styles.sidebarIconWrapper}>
                       <SymbolView
                         name={{ ios: 'person.crop.circle', android: 'account_circle', web: 'account_circle' } as any}
                         size={30}
-                        tintColor={BrandColors.navy}
-                        fallback={<AccountIcon tintColor={BrandColors.navy} size={30} />}
+                        tintColor={activeTab === 'account' ? BrandColors.orange : BrandColors.navy}
+                        fallback={<AccountIcon tintColor={activeTab === 'account' ? BrandColors.orange : BrandColors.navy} size={30} />}
                         style={{ width: 30, height: 30 }}
                       />
                     </View>
-                    <Text style={styles.sidebarItemText}>Account</Text>
+                    <Text style={[styles.sidebarItemText, activeTab === 'account' && styles.activeSidebarItemText]}>Account</Text>
                   </TouchableOpacity>
- 
-                  <TouchableOpacity style={styles.sidebarItem} onPress={() => { toggleSidebar(false); setActiveTab('wallet'); }}>
+
+                  <TouchableOpacity
+                    style={[styles.sidebarItem, activeTab === 'wallet' && styles.activeSidebarItem]}
+                    onPress={() => { toggleSidebar(false); setActiveTab('wallet'); }}
+                  >
                     <View style={styles.sidebarIconWrapper}>
                       <SymbolView
                         name={{ ios: 'creditcard', android: 'payment', web: 'payment' } as any}
                         size={30}
-                        tintColor={BrandColors.navy}
-                        fallback={<WalletIcon tintColor={BrandColors.navy} size={30} />}
+                        tintColor={activeTab === 'wallet' ? BrandColors.orange : BrandColors.navy}
+                        fallback={<WalletIcon tintColor={activeTab === 'wallet' ? BrandColors.orange : BrandColors.navy} size={30} />}
                         style={{ width: 30, height: 30 }}
                       />
                     </View>
-                    <Text style={styles.sidebarItemText}>My Wallet</Text>
+                    <Text style={[styles.sidebarItemText, activeTab === 'wallet' && styles.activeSidebarItemText]}>My Wallet</Text>
                   </TouchableOpacity>
- 
-                  <TouchableOpacity style={styles.sidebarItem} onPress={() => { toggleSidebar(false); setActiveTab('transactions'); }}>
+
+                  <TouchableOpacity
+                    style={[styles.sidebarItem, activeTab === 'transactions' && styles.activeSidebarItem]}
+                    onPress={() => { toggleSidebar(false); setActiveTab('transactions'); }}
+                  >
                     <View style={styles.sidebarIconWrapper}>
                       <SymbolView
                         name={{ ios: 'list.bullet.rectangle', android: 'receipt_long', web: 'receipt_long' } as any}
                         size={30}
-                        tintColor={BrandColors.navy}
-                        fallback={<TransactionsIcon tintColor={BrandColors.navy} size={30} />}
+                        tintColor={activeTab === 'transactions' ? BrandColors.orange : BrandColors.navy}
+                        fallback={<TransactionsIcon tintColor={activeTab === 'transactions' ? BrandColors.orange : BrandColors.navy} size={30} />}
                         style={{ width: 30, height: 30 }}
                       />
                     </View>
-                    <Text style={styles.sidebarItemText}>Transactions</Text>
+                    <Text style={[styles.sidebarItemText, activeTab === 'transactions' && styles.activeSidebarItemText]}>Transactions</Text>
                   </TouchableOpacity>
- 
-                  <TouchableOpacity style={styles.sidebarItem} onPress={() => { toggleSidebar(false); setActiveTab('settings'); }}>
+
+                  <TouchableOpacity
+                    style={[styles.sidebarItem, activeTab === 'settings' && styles.activeSidebarItem]}
+                    onPress={() => { toggleSidebar(false); setActiveTab('settings'); }}
+                  >
                     <View style={styles.sidebarIconWrapper}>
                       <SymbolView
                         name={{ ios: 'gearshape', android: 'settings', web: 'settings' } as any}
                         size={30}
-                        tintColor={BrandColors.navy}
-                        fallback={<SettingsIcon tintColor={BrandColors.navy} size={30} />}
+                        tintColor={activeTab === 'settings' ? BrandColors.orange : BrandColors.navy}
+                        fallback={<SettingsIcon tintColor={activeTab === 'settings' ? BrandColors.orange : BrandColors.navy} size={30} />}
                         style={{ width: 30, height: 30 }}
                       />
                     </View>
-                    <Text style={styles.sidebarItemText}>Settings</Text>
+                    <Text style={[styles.sidebarItemText, activeTab === 'settings' && styles.activeSidebarItemText]}>Settings</Text>
                   </TouchableOpacity>
- 
+
                   <TouchableOpacity
                     style={styles.sidebarLogoutItem}
                     onPress={() => {
@@ -3384,7 +3541,7 @@ export default function MapScreen() {
           </ScrollView>
         </Animated.View>
       </View>
-      {activeTab !== 'map' && renderTabContent()}
+      {activeTab !== 'map' ? renderTabContent() : null}
       {/* Full-screen parking detail modal */}
       {viewMoreHtml !== null && (Platform.OS === 'web' || WebView) && (
         <Modal
@@ -5010,11 +5167,12 @@ const styles = StyleSheet.create({
   sidebarItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
     width: '100%',
     alignSelf: 'stretch',
+    marginVertical: 4,
   },
   sidebarIconWrapper: {
     width: 30,
@@ -5028,14 +5186,21 @@ const styles = StyleSheet.create({
     color: BrandColors.navy,
     marginLeft: 16,
   },
+  activeSidebarItem: {
+    backgroundColor: BrandColors.navy,
+  },
+  activeSidebarItemText: {
+    color: BrandColors.white,
+  },
   sidebarLogoutItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
     width: '100%',
     alignSelf: 'stretch',
+    marginVertical: 4,
   },
   sidebarLogoutText: {
     fontSize: 19,
@@ -5066,8 +5231,8 @@ const styles = StyleSheet.create({
     paddingTop: 48,
     paddingBottom: 14,
     borderBottomWidth: 1.5,
-    borderBottomColor: BrandColors.navy,
-    backgroundColor: BrandColors.white,
+    borderBottomColor: '#1a2e3a',
+    backgroundColor: BrandColors.navy,
   },
   tabScreenHeaderBackBtn: {
     flexDirection: 'row',
@@ -5075,9 +5240,9 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 8,
-    backgroundColor: '#f1f5f9',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
+    backgroundColor: 'rgba(242, 146, 33, 0.15)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(242, 146, 33, 0.4)',
   },
   tabScreenHeaderBackText: {
     fontSize: 14,
@@ -5088,7 +5253,7 @@ const styles = StyleSheet.create({
   tabScreenHeaderTitle: {
     fontSize: 18,
     fontWeight: '900',
-    color: BrandColors.navy,
+    color: BrandColors.white,
   },
   tabScreenScroll: {
     flex: 1,
