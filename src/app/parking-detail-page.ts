@@ -34,10 +34,16 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
     'https://images.unsplash.com/photo-1573804630927-ea5a09a5bae4?w=800&q=80',
     'https://images.unsplash.com/photo-1555626906-fcf10d6851b4?w=800&q=80',
     'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=800&q=80',
+    'https://images.unsplash.com/photo-1616363088386-31c4a8414858?w=800&q=80',
+    'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80',
+    'https://images.unsplash.com/photo-1506521788723-8681148e22db?w=800&q=80',
+    'https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=800&q=80',
+    'https://images.unsplash.com/photo-1520038410233-7141be7e6f97?w=800&q=80',
   ];
-  const allImages: string[] = Array.isArray(spot.images) && spot.images.length > 0
+  const rawImages: string[] = Array.isArray(spot.images) && spot.images.length > 0
     ? spot.images
     : [spot.image, ...FALLBACK_IMAGES].filter(Boolean);
+  const allImages: string[] = Array.from(new Set(rawImages));
   const ratingNum = (spot.rating || 4.5).toFixed(1);
   const reviewCount = SAMPLE_REVIEWS.length;
   const location = spot.location || 'Lahug, Cebu City, Philippines';
