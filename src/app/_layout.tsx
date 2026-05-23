@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { Slot } from 'expo-router';
 
 import { KantoSplash } from '@/components/kanto-splash';
+import { KantoOnboarding } from '@/components/kanto-onboarding';
 import { KantoAuth } from '@/components/kanto-auth';
 
 const customTheme = {
@@ -19,12 +20,12 @@ const customTheme = {
   },
 };
 
-let globalAppState: 'splash' | 'auth' | 'app' = 'splash';
+let globalAppState: 'splash' | 'onboarding' | 'auth' | 'app' = 'splash';
 
 export default function TabLayout() {
-  const [appState, setAppState] = useState<'splash' | 'auth' | 'app'>(globalAppState);
+  const [appState, setAppState] = useState<'splash' | 'onboarding' | 'auth' | 'app'>(globalAppState);
 
-  const updateAppState = (state: 'splash' | 'auth' | 'app') => {
+  const updateAppState = (state: 'splash' | 'onboarding' | 'auth' | 'app') => {
     globalAppState = state;
     setAppState(state);
   };
@@ -38,7 +39,10 @@ export default function TabLayout() {
     <ThemeProvider value={customTheme}>
       <View style={{ flex: 1, backgroundColor: '#fffdeb' }}>
         {appState === 'splash' && (
-          <KantoSplash onFinish={() => updateAppState('auth')} />
+          <KantoSplash onFinish={() => updateAppState('onboarding')} />
+        )}
+        {appState === 'onboarding' && (
+          <KantoOnboarding onFinish={() => updateAppState('auth')} />
         )}
         {appState === 'auth' && (
           <KantoAuth

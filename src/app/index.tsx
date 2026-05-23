@@ -2866,7 +2866,7 @@ export default function MapScreen() {
           const vObj = VEHICLES.find(v => v.id === vehicle.type);
           const emoji = vObj ? vObj.emoji : '🚗';
           return (
-            <View key={vehicle.id} style={styles.vehicleCard}>
+            <View key={vehicle.id} style={styles.registeredVehicleCard}>
               <View style={styles.vehicleIconContainer}>
                 <Text style={{ fontSize: 20 }}>{emoji}</Text>
               </View>
@@ -5654,7 +5654,7 @@ const styles = StyleSheet.create({
     color: BrandColors.teal,
     fontWeight: '800',
   },
-  vehicleCard: {
+  registeredVehicleCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: BrandColors.white,
@@ -5823,5 +5823,24 @@ const styles = StyleSheet.create({
     color: '#475569',
     lineHeight: 18,
     fontWeight: '500',
+  },
+  appInfoContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    marginTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(38, 63, 79, 0.08)',
+  },
+  appInfoText: {
+    fontSize: 12,
+    color: '#8ca0ab',
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  appInfoLink: {
+    fontSize: 12,
+    color: BrandColors.teal,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
   },
 });
