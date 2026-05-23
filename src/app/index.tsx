@@ -586,8 +586,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-1',
     name: "Mang Juan's Gated Bakuran",
-    offsetLat: 0.0018,
-    offsetLng: 0.0025,
+    offsetLat: 0.0024,
+    offsetLng: -0.0031,
     prices: {
       motorcycle: 10,
       car: 25,
@@ -608,8 +608,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-2',
     name: "Aling Nena's Gated Garaje",
-    offsetLat: 0.0025,
-    offsetLng: 0.0018,
+    offsetLat: -0.0006,
+    offsetLng: -0.0019,
     prices: {
       motorcycle: 12,
       car: 30,
@@ -630,8 +630,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-3',
     name: "Tito Boy's Covered Carport",
-    offsetLat: 0.0012,
-    offsetLng: -0.0035,
+    offsetLat: 0.0017,
+    offsetLng: 0.0041,
     prices: {
       motorcycle: 10,
       car: 25,
@@ -652,8 +652,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-4',
     name: "Kuya Jojo's Front Yard Space",
-    offsetLat: -0.0015,
-    offsetLng: -0.0012,
+    offsetLat: 0.0003,
+    offsetLng: -0.0015,
     prices: {
       motorcycle: 8,
       car: 20,
@@ -674,8 +674,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-5',
     name: "Ate Sarah's Gated Driveway",
-    offsetLat: 0.0032,
-    offsetLng: -0.0022,
+    offsetLat: -0.0042,
+    offsetLng: -0.0028,
     prices: {
       motorcycle: 15,
       car: 35,
@@ -696,8 +696,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-6',
     name: "Mang Tomas' Vacant Lot",
-    offsetLat: 0.0028,
-    offsetLng: 0.0042,
+    offsetLat: -0.0005,
+    offsetLng: 0.0053,
     prices: {
       motorcycle: 8,
       car: 20,
@@ -718,8 +718,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-7',
     name: "Lola Flor's Canopy Garage",
-    offsetLat: 0.0032,
-    offsetLng: -0.0035,
+    offsetLat: 0.0039,
+    offsetLng: -0.0047,
     prices: {
       motorcycle: 8,
       car: 20,
@@ -740,8 +740,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-8',
     name: "Kuya Cardo's Heavy Vehicle Space",
-    offsetLat: 0.0045,
-    offsetLng: 0.0015,
+    offsetLat: 0.0007,
+    offsetLng: 0.0021,
     prices: {
       motorcycle: 10,
       car: 30,
@@ -762,8 +762,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-9',
     name: "Ninong Bobby's Backyard Pave",
-    offsetLat: 0.0042,
-    offsetLng: 0.0028,
+    offsetLat: -0.0003,
+    offsetLng: -0.0036,
     prices: {
       motorcycle: 10,
       car: 25,
@@ -784,8 +784,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-10',
     name: "Ate Grace's Covered Carport",
-    offsetLat: 0.0018,
-    offsetLng: 0.0035,
+    offsetLat: 0.0028,
+    offsetLng: -0.0051,
     prices: {
       motorcycle: 10,
       car: 20,
@@ -806,8 +806,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-11',
     name: "Tiyo Ramon's Open Lot",
-    offsetLat: 0.0055,
-    offsetLng: -0.0045,
+    offsetLat: 0.0071,
+    offsetLng: -0.0062,
     prices: {
       motorcycle: 8,
       car: 20,
@@ -828,8 +828,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-12',
     name: "Aling Marta's Backyard Driveway",
-    offsetLat: 0.0062,
-    offsetLng: 0.0058,
+    offsetLat: -0.0079,
+    offsetLng: 0.0073,
     prices: {
       motorcycle: 10,
       car: 25,
@@ -850,8 +850,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-13',
     name: "Kuya Dante's Commercial Lot",
-    offsetLat: 0.0075,
-    offsetLng: -0.0025,
+    offsetLat: 0.0089,
+    offsetLng: -0.0034,
     prices: {
       motorcycle: 12,
       car: 30,
@@ -872,8 +872,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-14',
     name: "Lolo Nestor's Shade Garage",
-    offsetLat: 0.0082,
-    offsetLng: 0.0035,
+    offsetLat: 0.0094,
+    offsetLng: 0.0049,
     prices: {
       motorcycle: 8,
       car: 20,
@@ -894,8 +894,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-15',
     name: "Manong Kiko's Gravel Space",
-    offsetLat: 0.0090,
-    offsetLng: -0.0062,
+    offsetLat: -0.0068,
+    offsetLng: -0.0084,
     prices: {
       motorcycle: 8,
       car: 20,
@@ -916,8 +916,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-16',
     name: "Tita Linda's Compound Parking",
-    offsetLat: 0.0098,
-    offsetLng: 0.0075,
+    offsetLat: 0.0105,
+    offsetLng: 0.0068,
     prices: {
       motorcycle: 10,
       car: 25,
@@ -938,8 +938,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-17',
     name: "Kuya Ben's Vacant Lot",
-    offsetLat: 0.0110,
-    offsetLng: -0.0038,
+    offsetLat: 0.0078,
+    offsetLng: -0.0053,
     prices: {
       motorcycle: 8,
       car: 20,
@@ -960,8 +960,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-18',
     name: "Ate Helen's Covered Carport",
-    offsetLat: 0.0118,
-    offsetLng: 0.0048,
+    offsetLat: 0.0112,
+    offsetLng: 0.0057,
     prices: {
       motorcycle: 12,
       car: 30,
@@ -982,8 +982,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-19',
     name: "Mang Gorio's Fenced Yard",
-    offsetLat: 0.0130,
-    offsetLng: -0.0078,
+    offsetLat: -0.0083,
+    offsetLng: -0.0098,
     prices: {
       motorcycle: 8,
       car: 20,
@@ -1004,8 +1004,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-20',
     name: "Kuya Cardo's Backyard Canopy",
-    offsetLat: 0.0142,
-    offsetLng: 0.0065,
+    offsetLat: 0.0097,
+    offsetLng: -0.0071,
     prices: {
       motorcycle: 10,
       car: 25,
@@ -1026,8 +1026,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-21',
     name: "Kuya Lando's Gated Area",
-    offsetLat: 0.0155,
-    offsetLng: -0.0090,
+    offsetLat: 0.0102,
+    offsetLng: -0.0114,
     prices: {
       motorcycle: 8,
       car: 20,
@@ -1048,8 +1048,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-22',
     name: "Ate Nita's Secure Lot",
-    offsetLat: 0.0168,
-    offsetLng: 0.0085,
+    offsetLat: 0.0083,
+    offsetLng: 0.0078,
     prices: {
       motorcycle: 10,
       car: 25,
@@ -1062,7 +1062,7 @@ const BASE_PARKING_SPACES = [
     rating: 4.5,
     reviewCount: 6,
     location: 'Mabolo-Lahug Border, Cebu City',
-    description: 'Malawak at bakanteng lupa. Sementado at may cyclone wire fence.',
+    description: 'Malawak at bakanteng lupa. Sementado and may cyclone wire fence.',
     amenities: ['Gated Property', 'Lighting', 'Cement Pavement'],
     image: 'https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=600&auto=format&fit=crop&q=60',
     vehicles: ['motorcycle', 'car', 'tricycle', 'jeepney'],
@@ -1070,8 +1070,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-23',
     name: "Mang Mario's Garage Canopy",
-    offsetLat: 0.0180,
-    offsetLng: -0.0055,
+    offsetLat: 0.0117,
+    offsetLng: -0.0046,
     prices: {
       motorcycle: 10,
       car: 22,
@@ -1092,8 +1092,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-24',
     name: "Kuya Jojo's Backyard Lot",
-    offsetLat: 0.0195,
-    offsetLng: 0.0110,
+    offsetLat: 0.0064,
+    offsetLng: -0.0092,
     prices: {
       motorcycle: 8,
       car: 20,
@@ -1114,8 +1114,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-25',
     name: "Tita Marie's Gated Driveway",
-    offsetLat: 0.0210,
-    offsetLng: 0.0055,
+    offsetLat: -0.0095,
+    offsetLng: -0.0059,
     prices: {
       motorcycle: 12,
       car: 30,
@@ -1136,8 +1136,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-26',
     name: "Tiyo Fred's Vacant Space",
-    offsetLat: 0.0225,
-    offsetLng: 0.0098,
+    offsetLat: 0.0124,
+    offsetLng: 0.0084,
     prices: {
       motorcycle: 8,
       car: 20,
@@ -1158,8 +1158,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-27',
     name: "Aling Shirley's Gated Garaje",
-    offsetLat: 0.0240,
-    offsetLng: -0.0075,
+    offsetLat: -0.0104,
+    offsetLng: -0.0108,
     prices: {
       motorcycle: 10,
       car: 25,
@@ -1180,8 +1180,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-28',
     name: "Lolo Boy's Grass Lot",
-    offsetLat: 0.0255,
-    offsetLng: 0.0135,
+    offsetLat: -0.0089,
+    offsetLng: -0.0126,
     prices: {
       motorcycle: 8,
       car: 18,
@@ -1202,8 +1202,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-29',
     name: "Kuya Noli's Cemented Yard",
-    offsetLat: 0.0270,
-    offsetLng: 0.0068,
+    offsetLat: 0.0115,
+    offsetLng: 0.0061,
     prices: {
       motorcycle: 10,
       car: 25,
@@ -1224,8 +1224,8 @@ const BASE_PARKING_SPACES = [
   {
     id: 'spot-30',
     name: "Ate Tessie's Covered Carport",
-    offsetLat: 0.0285,
-    offsetLng: -0.0045,
+    offsetLat: -0.0118,
+    offsetLng: -0.0064,
     prices: {
       motorcycle: 10,
       car: 25,
