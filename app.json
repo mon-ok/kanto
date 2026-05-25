@@ -15,7 +15,8 @@
         "backgroundColor": "#fffdeb",
         "foregroundImage": "./assets/images/kanto-logo-square.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.leidc024.kanto"
     },
     "web": {
       "output": "static",
@@ -37,6 +38,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "fee748bb-aa21-4689-9fbe-be7240ac5dfb"
+      }
     }
   }
 }
