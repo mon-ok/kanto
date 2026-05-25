@@ -50,7 +50,7 @@ export function buildParkingDetailPage(spot: any, initiallyBooked: boolean = fal
 
   /* ── Image slides ── */
   const slidesHtml = allImages.map((img: string, idx: number) =>
-    `<div class="slide${idx === 0 ? ' active' : ''}"><img src="${img}" alt="Parking space photo" loading="lazy" /></div>`
+    `<div class="slide${idx === 0 ? ' active' : ''}"><img src="${img}" alt="Parking space photo" /></div>`
   ).join('');
 
   const dotHtml = allImages.map((_: string, idx: number) =>

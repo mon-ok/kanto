@@ -569,17 +569,46 @@ function shuffleArray<T>(array: T[]): T[] {
   return arr;
 }
 
-function getRandomParkingImages(): string[] {
+/**
+ * Resolves each bundled parking image to a base64 data URI so it can be
+ * embedded in WebView HTML <img> tags. resolveAssetSource() returns
+ * different schemes (http://localhost in Expo Go, asset:/// in production)
+ * that <img> tags cannot load — but fetching the URI and encoding as
+ * base64 produces a data: URI that works everywhere.
+ *
+ * Uses ArrayBuffer + btoa instead of FileReader because FileReader is
+ * a Web API not reliably available in React Native's Hermes engine.
+ */
+async function resolveImageToDataUri(assetModule: number): Promise<string | null> {
   try {
-    const uris = PARKING_IMAGES.map((img) => RNImage.resolveAssetSource(img)?.uri).filter(Boolean) as string[];
-    const sourcePool = uris.length > 0 ? uris : REMOTE_FALLBACK_IMAGES;
-    const shuffled = shuffleArray(sourcePool);
-    return shuffled.slice(0, Math.min(6, shuffled.length));
-  } catch (e) {
-    console.warn('Failed to resolve local parking images:', e);
-    const shuffled = shuffleArray(REMOTE_FALLBACK_IMAGES);
-    return shuffled.slice(0, Math.min(6, shuffled.length));
+    const source = RNImage.resolveAssetSource(assetModule);
+    if (!source?.uri) return null;
+    const response = await fetch(source.uri);
+    const arrayBuffer = await response.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const base64 = btoa(binary);
+    return `data:image/jpeg;base64,${base64}`;
+  } catch {
+    return null;
   }
+}
+
+async function getRandomParkingImagesAsync(): Promise<string[]> {
+  try {
+    const shuffled = shuffleArray([...PARKING_IMAGES]);
+    const picked = shuffled.slice(0, 6);
+    const dataUris = await Promise.all(picked.map(resolveImageToDataUri));
+    const valid = dataUris.filter(Boolean) as string[];
+    if (valid.length > 0) return valid;
+  } catch (e) {
+    console.warn('Failed to convert parking images to base64:', e);
+  }
+  // Fallback to remote HTTPS images
+  return shuffleArray(REMOTE_FALLBACK_IMAGES).slice(0, 6);
 }
 
 const BASE_PARKING_SPACES = [
@@ -2215,14 +2244,21 @@ export default function MapScreen() {
   };
 
   useEffect(() => {
-    // Assign 6 random resolved local images to each parking spot on mount
-    BASE_PARKING_SPACES.forEach((spot) => {
-      const randomImages = getRandomParkingImages();
-      if (randomImages.length > 0) {
-        (spot as any).images = randomImages;
-        spot.image = randomImages[0];
-      }
-    });
+    // Assign 6 random base64 data-URI images to each parking spot on mount.
+    // We do this async because resolveAssetSource URIs must be fetched and
+    // converted to data: URIs to be usable inside WebView HTML <img> tags.
+    const assignImages = async () => {
+      await Promise.all(
+        BASE_PARKING_SPACES.map(async (spot) => {
+          const randomImages = await getRandomParkingImagesAsync();
+          if (randomImages.length > 0) {
+            (spot as any).images = randomImages;
+            spot.image = randomImages[0];
+          }
+        })
+      );
+    };
+    assignImages();
 
     requestLocation();
 
@@ -4038,7 +4074,7 @@ export default function MapScreen() {
             ) : (
               WebView && (
                 <WebView
-                  source={{ html: viewMoreHtml }}
+                  source={{ html: viewMoreHtml, baseUrl: 'https://kanto.app' }}
                   style={{ flex: 1, backgroundColor: '#f1f5f9' }}
                   javaScriptEnabled={true}
                   domStorageEnabled={true}

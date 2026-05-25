@@ -10,6 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { Image } from 'expo-image';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandColors } from '@/constants/theme';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -39,6 +40,7 @@ const BackgroundMap = () => (
 );
 
 export function KantoOnboarding({ onFinish }: KantoOnboardingProps) {
+  const insets = useSafeAreaInsets();
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const [typedText, setTypedText] = useState('');
@@ -565,7 +567,7 @@ export function KantoOnboarding({ onFinish }: KantoOnboardingProps) {
       </ScrollView>
 
       {/* Bottom Controls */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         {/* Skip button */}
         <TouchableOpacity
           style={styles.skipButton}
@@ -671,7 +673,7 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 80,
+    paddingBottom: 110,
   },
   textContainer: {
     paddingHorizontal: 32,
@@ -1266,11 +1268,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 90,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
+    paddingTop: 16,
     backgroundColor: BrandColors.background,
     borderTopWidth: 1,
     borderTopColor: 'rgba(38, 63, 79, 0.05)',
